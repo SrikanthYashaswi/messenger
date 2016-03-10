@@ -26,6 +26,5 @@ public class test {
         x.add(8);
         System.out.println(x.size());
         x.remove(new Integer(8));
-        System.out.println(x.size()+ " "+ x.get(1));
     }
 }

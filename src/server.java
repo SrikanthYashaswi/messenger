@@ -137,6 +137,7 @@ class socketThread implements Runnable
     public int ID;
     PrintStream o;
     String name="";
+    ConnectedBy ConnectionType;
     boolean handshake = false;
     public socketThread(){
 
@@ -152,8 +153,36 @@ class socketThread implements Runnable
     {
         try {
             o = new PrintStream(client.getOutputStream());
-            if(message.length()>5) {
-                o.println("\n\r" + message);
+            if(!handshake)
+            {
+                o.println(message);
+            }
+            else {
+                if (ConnectionType == ConnectedBy.CONSOLE) {
+                    o.println(message + "\r");
+                }
+                if (ConnectionType == ConnectedBy.BROWSER) {
+                    byte rawData[] = message.getBytes();
+                    int frameCount =0;
+                    byte frame[]= new byte[10];
+                    frame[0] =(byte)129;
+                    if(rawData.length<=125)
+                    {
+                        frame[1] = (byte) rawData.length;
+                    }
+                    frameCount=2;
+                    int bLength = frameCount+rawData.length;
+                    byte[] reply = new byte[bLength];
+                    for(int i=0;i<frameCount;i++)
+                    {
+                        reply[i]=frame[i];
+                    }
+                    for(int i=0;i<rawData.length;i++)
+                    {
+                        reply[i+frameCount]=rawData[i];
+                    }
+                    o.write(reply);
+                }
             }
         }
         catch(Exception c){
@@ -164,56 +193,33 @@ class socketThread implements Runnable
     {
         try
         {
-            boolean emt =true;
             String hshkMeta[][] = new String[30][2];
-            String tr;
             String input;
             boolean handShake = false;
             int temp = 0;
             System.out.println("new Connection " + client.getInetAddress()+":"+client.getPort());
             DataInputStream d = new DataInputStream(client.getInputStream());
-            //  PrintStream o = new PrintStream(client.getOutputStream());
-            if(!handShake){
-                send("Enter Your Name :");
-            }
             while((input=d.readLine())!=null)
             {
                 if(!handShake) {
-                    name=input;
-                    handShake=true;
-                    String list="";
-                    for(int i=0;i<UniversalData.UsersPool.ActiveUser.size();i++)
+                    if (input.contains("GET / HTTP/1.1"))
                     {
-                        int j = UniversalData.UsersPool.ActiveUser.get(i);
-                        if(UniversalData.connection[j].ID!=this.ID) {
-                            UniversalData.connection[j].send(">>new user connected " + " : " + input);
-                            list = list + UniversalData.connection[j].name + " , ";
-                        }
-                    }
-                    this.send("Connected Clients :" + list);
-                }
-                else {
-                    System.out.println(name +" : "+input);
-                    for(int i=0;i<UniversalData.UsersPool.ActiveUser.size();i++)
-                    {
-                        int j = UniversalData.UsersPool.ActiveUser.get(i);
-                        if(UniversalData.connection[j].ID!= this.ID)
-                            UniversalData.connection[j].send(name+" : "+input);
-                    }
-                }
-              /*  new inputThread(d,client);
-                new outputThread(o);
-                if(handshake == false ) // do handshake
-                {
-                    if((tr = d.readLine()).equals("")!=true && temp<14) {
-                        hshkMeta[temp][0] = tr;
+                        ConnectionType = ConnectedBy.BROWSER;
+                        System.out.println("Browser Connected..");
+                        hshkMeta[temp][0] = input;
+                        System.out.println(hshkMeta[temp][0]);
                         temp++;
-                    }
-                    else{
+                        while((input=d.readLine()).equals("")!=true && temp<14)
+                        {
+                            hshkMeta[temp][0] = input;
+                            System.out.println(input);
+                            temp++;
+                        }
                         for(int i=1;i<temp;i++)
                         {
-                                hshkMeta[i] = hshkMeta[i][0].split(": ");
+                            hshkMeta[i] = hshkMeta[i][0].split(": ");
                         }
+                        System.out.println("-----------------------");
                         for(int i=1;i<temp;i++)
                         {
                             if(hshkMeta[i][0].equals("Sec-WebSocket-Key"))
@@ -225,11 +231,12 @@ class socketThread implements Runnable
                                     byte x[] = rr.getBytes();
                                     byte op[] = md.digest(x);
                                     String encoded = Base64.encode(op);
-                                    send("HTTP/1.1 101 Switching Protocols");
+                                    send("HTTP/1.1 101");
                                     send("Upgrade: websocket");
                                     send("Connection: Upgrade");
                                     send("Sec-WebSocket-Accept: "+encoded+"\r\n");
                                     handshake = true;
+                                    System.out.println("Browser Handshake Complete");
                                 }
                                 catch(NoSuchAlgorithmException c){
                                 }
@@ -237,8 +244,39 @@ class socketThread implements Runnable
                         }
                         handshake=true;
                     }
+                    else
+                    {
+                        ConnectionType = ConnectedBy.CONSOLE;
+                        name = input;
+                        handShake = true;
+                        String list = "";
+                        for (int i = 0; i < UniversalData.UsersPool.ActiveUser.size(); i++)
+                        {
+                            int j = UniversalData.UsersPool.ActiveUser.get(i);
+                            if (UniversalData.connection[j].ID != this.ID)
+                            {
+                                UniversalData.connection[j].send(">>new user connected " + " : " + input);
+                                list = list + UniversalData.connection[j].name + " , ";
+                            }
+                        }
+                        this.send("Connected Clients :" + list);
+                    }
                 }
-                else {}*/
+                else
+                {
+                    if(ConnectionType==ConnectedBy.CONSOLE) {
+                        System.out.println(name + " : " + input);
+                        for (int i = 0; i < UniversalData.UsersPool.ActiveUser.size(); i++) {
+                            int j = UniversalData.UsersPool.ActiveUser.get(i);
+                            if (UniversalData.connection[j].ID != this.ID)
+                                UniversalData.connection[j].send(name + " : " + input);
+                        }
+                    }
+                    if(ConnectionType==ConnectedBy.BROWSER)
+                    {
+
+                    }
+                }
             }
             client.close();
         }

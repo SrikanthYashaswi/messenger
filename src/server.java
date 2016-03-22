@@ -74,7 +74,7 @@ class _UsersPool{
     }
 }
 class UniversalData{
-    static public final int maxUsers=3;
+    static public final int maxUsers=20000;
     static public socketThread connection[] = new socketThread[UniversalData.maxUsers];
     static public _UsersPool UsersPool = new _UsersPool();
     static public boolean DEBUG = false;
@@ -159,7 +159,7 @@ class socketThread implements Runnable
             }
             else {
                 if (ConnectionType == ConnectedBy.CONSOLE) {
-                    o.println(message + "\r");
+                    o.println(message);
                 }
                 if (ConnectionType == ConnectedBy.BROWSER) {
                     byte rawData[] = message.getBytes();
@@ -199,6 +199,11 @@ class socketThread implements Runnable
             int temp = 0;
             System.out.println("new Connection " + client.getInetAddress()+":"+client.getPort());
             DataInputStream d = new DataInputStream(client.getInputStream());
+
+            if(!handshake)
+            {
+                this.send("Enter your name: ");
+            }
             while((input=d.readLine())!=null)
             {
                 if(!handShake) {
@@ -248,6 +253,7 @@ class socketThread implements Runnable
                     {
                         ConnectionType = ConnectedBy.CONSOLE;
                         name = input;
+                        System.out.println(name+" connected!");
                         handShake = true;
                         String list = "";
                         for (int i = 0; i < UniversalData.UsersPool.ActiveUser.size(); i++)

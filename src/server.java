@@ -2,6 +2,7 @@
 
 
 import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
+import com.sun.org.apache.xerces.internal.parsers.CachingParserPool;
 
 import javax.naming.LimitExceededException;
 import java.security.*;
@@ -189,42 +190,48 @@ class socketThread implements Runnable
 
         }
     }
+    public String toString(byte[] inp)
+    {
+        char sd[]= new char[1000];
+        for(int i=0;i<inp.length;i++)
+        {
+            sd[i]=(char)inp[i];
+        }
+        String ret = String.copyValueOf(sd);
+        return ret;
+    }
     public void run()
     {
         try
         {
-            String hshkMeta[][] = new String[30][2];
+            String[][] hshkMeta = new String[30][2];
+            String hmeta[] = new String [30];
             String input;
             boolean handShake = false;
             int temp = 0;
             System.out.println("new Connection " + client.getInetAddress()+":"+client.getPort());
             DataInputStream d = new DataInputStream(client.getInputStream());
-
-            if(!handshake)
-            {
-                this.send("Enter your name: ");
-            }
+            InputStream in = client.getInputStream();
+            byte ch[]= new byte[1000];
             while((input=d.readLine())!=null)
             {
                 if(!handShake) {
                     if (input.contains("GET / HTTP/1.1"))
                     {
                         ConnectionType = ConnectedBy.BROWSER;
-                        System.out.println("Browser Connected..");
-                        hshkMeta[temp][0] = input;
-                        System.out.println(hshkMeta[temp][0]);
+                        //System.out.println("Browser Connected..");
+                        hshkMeta[0][0] = input;
                         temp++;
                         while((input=d.readLine()).equals("")!=true && temp<14)
                         {
                             hshkMeta[temp][0] = input;
-                            System.out.println(input);
                             temp++;
                         }
                         for(int i=1;i<temp;i++)
                         {
                             hshkMeta[i] = hshkMeta[i][0].split(": ");
                         }
-                        System.out.println("-----------------------");
+                        //System.out.println("-----------------------");
                         for(int i=1;i<temp;i++)
                         {
                             if(hshkMeta[i][0].equals("Sec-WebSocket-Key"))
@@ -239,15 +246,16 @@ class socketThread implements Runnable
                                     send("HTTP/1.1 101");
                                     send("Upgrade: websocket");
                                     send("Connection: Upgrade");
-                                    send("Sec-WebSocket-Accept: "+encoded+"\r\n");
+                                    send("Sec-WebSocket-Accept:"+encoded+"\r\n");
                                     handshake = true;
-                                    System.out.println("Browser Handshake Complete");
+                                    //System.out.println("Browser Handshake Complete");
                                 }
                                 catch(NoSuchAlgorithmException c){
                                 }
                             }
                         }
                         handshake=true;
+                        break;
                     }
                     else
                     {
@@ -281,6 +289,40 @@ class socketThread implements Runnable
                     if(ConnectionType==ConnectedBy.BROWSER)
                     {
 
+                    }
+                }
+            }
+            if(ConnectionType==ConnectedBy.BROWSER)
+            {
+                byte mask[] = new byte[4];
+                byte msg[];
+                while(in.read(ch)!=-1)
+                {
+                    int len = ch.length;
+                    if(len!=-1)
+                    {
+                        len = (byte) (ch[1] & 127);
+                        msg = new byte[len];
+                        int ind = 2;
+                        for(int i=2;i<2+4;i++)
+                        {
+                            mask[i-2] = ch[i];
+                        }
+                        for(int i=6,j=0;i<6+len;i++,j++)
+                        {
+                            msg[i-6]= (byte) (ch[i] ^ mask[j%4]);
+                        }
+                        if(msg[0]==3&&msg[1]==-23)  // socket closed by browser (strange no meaning..!)
+                        {
+                            break;
+                        }
+                        String ms = toString(msg);
+                        for (int i = 0; i < UniversalData.UsersPool.ActiveUser.size(); i++) {
+                            int j = UniversalData.UsersPool.ActiveUser.get(i);
+                            if (UniversalData.connection[j].ID != this.ID)
+                                UniversalData.connection[j].send(name + " : " + ms);
+                        }
+                        System.out.println(ms);
                     }
                 }
             }

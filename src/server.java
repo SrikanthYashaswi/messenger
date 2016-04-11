@@ -342,7 +342,9 @@ class socketThread implements Runnable
             System.out.println(c.getMessage());
         }
         finally{
-            pushToAllUsers(new notification(name+" left"));
+            if(!name.equals("")) {
+                pushToAllUsers(new notification(name + " left"));
+            }
             name="";
             UniversalData.UsersPool.DisconnectUser(ID);
             System.out.println("Connection"+ ID +" Terminated!");

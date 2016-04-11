@@ -368,6 +368,7 @@ class socketThread implements Runnable
     }
     public void pushToAllUsers(Object data)
     {
+        if(!data.toString().equals(""))
         for(int i=0;i<UniversalData.UsersPool.ActiveUser.size();i++)
         {
             int j = UniversalData.UsersPool.ActiveUser.get(i);

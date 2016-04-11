@@ -18,6 +18,28 @@ class limitExceed extends Throwable{
 }
 enum ConnectedBy{CONSOLE,BROWSER};
 
+class notification{
+    public String text;
+    public notification(String notifStr)
+    {
+        text = ">> "+ notifStr;
+    }
+    public String toString()
+    {
+        return text;
+    }
+}
+class message{
+    public String text;
+    public message(String msgStr)
+    {
+        text = msgStr;
+    }
+    public String toString()
+    {
+        return text;
+    }
+}
 class _UsersPool{
     public LinkedList<Integer> ActiveUser = new LinkedList<Integer> ();
     LinkedList<Integer> UnusedSlots = new LinkedList<Integer> ();
@@ -75,7 +97,7 @@ class _UsersPool{
     }
 }
 class UniversalData{
-    static public final int maxUsers=20000;
+    static public final int maxUsers=70000;
     static public socketThread connection[] = new socketThread[UniversalData.maxUsers];
     static public _UsersPool UsersPool = new _UsersPool();
     static public boolean DEBUG = false;
@@ -192,8 +214,9 @@ class socketThread implements Runnable
     }
     public String toString(byte[] inp)
     {
-        char sd[]= new char[1000];
-        for(int i=0;i<inp.length;i++)
+        char sd[]= new char[inp.length];
+        int i=0;
+        for(i=0;i<inp.length;i++)
         {
             sd[i]=(char)inp[i];
         }
@@ -209,7 +232,7 @@ class socketThread implements Runnable
             String input;
             boolean handShake = false;
             int temp = 0;
-            System.out.println("new Connection " + client.getInetAddress()+":"+client.getPort());
+            System.out.println("NEW (" + ID +")"+ client.getInetAddress()+":"+client.getPort());
             DataInputStream d = new DataInputStream(client.getInputStream());
             InputStream in = client.getInputStream();
             byte ch[]= new byte[1000];
@@ -263,32 +286,14 @@ class socketThread implements Runnable
                         name = input;
                         System.out.println(name+" connected!");
                         handShake = true;
-                        String list = "";
-                        for (int i = 0; i < UniversalData.UsersPool.ActiveUser.size(); i++)
-                        {
-                            int j = UniversalData.UsersPool.ActiveUser.get(i);
-                            if (UniversalData.connection[j].ID != this.ID)
-                            {
-                                UniversalData.connection[j].send(">>new user connected " + " : " + input);
-                                list = list + UniversalData.connection[j].name + " , ";
-                            }
-                        }
-                        this.send("Connected Clients :" + list);
+                        pushToAllUsers(new notification(this.name + " is now connected!"));
+                        pushToThisUser(new notification("Connected Clients :"+ getActiveUsersList()));
                     }
                 }
                 else
                 {
                     if(ConnectionType==ConnectedBy.CONSOLE) {
-                        System.out.println(name + " : " + input);
-                        for (int i = 0; i < UniversalData.UsersPool.ActiveUser.size(); i++) {
-                            int j = UniversalData.UsersPool.ActiveUser.get(i);
-                            if (UniversalData.connection[j].ID != this.ID)
-                                UniversalData.connection[j].send(name + " : " + input);
-                        }
-                    }
-                    if(ConnectionType==ConnectedBy.BROWSER)
-                    {
-
+                        pushToAllUsers(new message(name + " : " + input));
                     }
                 }
             }
@@ -317,12 +322,17 @@ class socketThread implements Runnable
                             break;
                         }
                         String ms = toString(msg);
-                        for (int i = 0; i < UniversalData.UsersPool.ActiveUser.size(); i++) {
-                            int j = UniversalData.UsersPool.ActiveUser.get(i);
-                            if (UniversalData.connection[j].ID != this.ID)
-                                UniversalData.connection[j].send(name + " : " + ms);
+                        if(name.equals(""))
+                        {
+                            name = ms;
+                            System.out.println(name+" connected!");
+                            pushToAllUsers(new notification(ms + " is now connected!"));
+                            pushToThisUser(new notification("Connected Clients : "+getActiveUsersList()));
                         }
-                        System.out.println(ms);
+                        else
+                        {
+                            pushToAllUsers(new message(name+" : "+ms));
+                        }
                     }
                 }
             }
@@ -332,17 +342,39 @@ class socketThread implements Runnable
             System.out.println(c.getMessage());
         }
         finally{
-            for(int i=0;i<UniversalData.UsersPool.ActiveUser.size();i++)
-            {
-                int j = UniversalData.UsersPool.ActiveUser.get(i);
-                if(UniversalData.connection[j].ID!= ID)
-                {
-                    UniversalData.connection[j].send(">> "+name+" left .");
-                }
-            }
+            pushToAllUsers(new notification(name+" left"));
             name="";
             UniversalData.UsersPool.DisconnectUser(ID);
             System.out.println("Connection"+ ID +" Terminated!");
+        }
+    }
+    public String getActiveUsersList()
+    {
+        String List="";
+        int ListSize = UniversalData.UsersPool.ActiveUser.size();
+        for(int i=0;i<ListSize;i++) {
+            int tm = UniversalData.UsersPool.ActiveUser.get(i);
+            if (UniversalData.connection[tm].ID != this.ID) {
+                List = List + UniversalData.connection[tm].name;
+                List = List + ",";
+            }
+        }
+        List = List + ".";
+        return List;
+    }
+    public void pushToThisUser(Object data)
+    {
+        this.send(data.toString());
+    }
+    public void pushToAllUsers(Object data)
+    {
+        for(int i=0;i<UniversalData.UsersPool.ActiveUser.size();i++)
+        {
+            int j = UniversalData.UsersPool.ActiveUser.get(i);
+            if(UniversalData.connection[j].ID!= ID)
+            {
+                UniversalData.connection[j].send(data.toString());
+            }
         }
     }
 }
@@ -359,11 +391,9 @@ public class server {
         while(true)
         {
             try {
-                System.out.println("Listening for new Connection...");
                 Socket client = server.accept();
                 int FreeSlot = UniversalData.UsersPool.NextFreeSlot();
-                System.out.println("Available at " + FreeSlot);
-                UniversalData.connection[FreeSlot] = new socketThread(client, "ConnectionThread", FreeSlot);
+                UniversalData.connection[FreeSlot] = new socketThread(client, "ConnectionThread "+FreeSlot, FreeSlot);
                 if (firstRun) {
                     new outputThread();
                     firstRun = false;

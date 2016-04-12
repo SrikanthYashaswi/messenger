@@ -343,7 +343,9 @@ class socketThread implements Runnable
             System.out.println(c.getMessage());
         }
         finally{
-            pushToAllUsers(new notification(name+" left"));
+            if(!name.equals("")) {
+                pushToAllUsers(new notification(name + " left"));
+            }
             name="";
             UniversalData.UsersPool.DisconnectUser(ID);
             System.out.println("Connection"+ ID +" Terminated!");
@@ -369,6 +371,7 @@ class socketThread implements Runnable
     }
     public void pushToAllUsers(Object data)
     {
+        if(!data.toString().equals(""))
         for(int i=0;i<UniversalData.UsersPool.ActiveUser.size();i++)
         {
             int j = UniversalData.UsersPool.ActiveUser.get(i);

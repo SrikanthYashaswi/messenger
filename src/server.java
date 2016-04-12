@@ -268,7 +268,8 @@ class socketThread implements Runnable
                                     String encoded = Base64.encode(op);
                                     send("HTTP/1.1 101");
                                     send("Upgrade: websocket");
-                                    send("Connection: Upgrade");
+                                    send("Connection: keep-alive");
+                                    //send("Connection: Upgrade");
                                     send("Sec-WebSocket-Accept:"+encoded+"\r\n");
                                     handshake = true;
                                     //System.out.println("Browser Handshake Complete");

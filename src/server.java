@@ -339,7 +339,7 @@ class socketThread implements Runnable
             client.close();
         }
         catch(Exception c){
-            System.out.println("error "+c.getMessage());
+            System.out.println("error "+c.getMessage()+" "+c.getCause());
         }
         finally{
             if(!name.equals("")) {

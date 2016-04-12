@@ -11,6 +11,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+
 class limitExceed extends Throwable{
     public limitExceed(){
         System.out.println("no more connections!");
@@ -97,7 +98,7 @@ class _UsersPool{
     }
 }
 class UniversalData{
-    static public final int maxUsers=70000;
+    static public final int maxUsers=60000;
     static public socketThread connection[] = new socketThread[UniversalData.maxUsers];
     static public _UsersPool UsersPool = new _UsersPool();
     static public boolean DEBUG = false;
@@ -301,37 +302,32 @@ class socketThread implements Runnable
             {
                 byte mask[] = new byte[4];
                 byte msg[];
-                while(in.read(ch)!=-1)
-                {
+                while(in.read(ch)!=-1) {
                     int len = ch.length;
-                    if(len!=-1)
-                    {
+                    if (len != -1) {
                         len = (byte) (ch[1] & 127);
                         msg = new byte[len];
                         int ind = 2;
-                        for(int i=2;i<2+4;i++)
-                        {
-                            mask[i-2] = ch[i];
-                        }
-                        for(int i=6,j=0;i<6+len;i++,j++)
-                        {
-                            msg[i-6]= (byte) (ch[i] ^ mask[j%4]);
-                        }
-                        if(msg[0]==3&&msg[1]==-23)  // socket closed by browser (strange no meaning..!)
-                        {
-                            break;
-                        }
-                        String ms = toString(msg);
-                        if(name.equals(""))
-                        {
-                            name = ms;
-                            System.out.println(name+" connected!");
-                            pushToAllUsers(new notification(ms + " is now connected!"));
-                            pushToThisUser(new notification("Connected Clients : "+getActiveUsersList()));
-                        }
-                        else
-                        {
-                            pushToAllUsers(new message(name+" : "+ms));
+                        if (len > 0) {
+                            for (int i = 2; i < 2 + 4; i++) {
+                                mask[i - 2] = ch[i];
+                            }
+                            for (int i = 6, j = 0; i < 6 + len; i++, j++) {
+                                msg[i - 6] = (byte) (ch[i] ^ mask[j % 4]);
+                            }
+                            if (msg[0] == 3 && msg[1] == -23)  // socket closed by browser (strange no meaning..!)
+                            {
+                                break;
+                            }
+                            String ms = toString(msg);
+                            if (name.equals("")) {
+                                name = ms;
+                                System.out.println(name + " connected!");
+                                pushToAllUsers(new notification(ms + " is now connected!"));
+                                pushToThisUser(new notification("Connected Clients : " + getActiveUsersList()));
+                            } else {
+                                pushToAllUsers(new message(name + " : " + ms));
+                            }
                         }
                     }
                 }
@@ -339,7 +335,7 @@ class socketThread implements Runnable
             client.close();
         }
         catch(Exception c){
-            System.out.println("error "+c.getMessage()+" "+c.getCause());
+            System.out.println("error "+c.getMessage()+" "+c.getCause() +" "+c.getClass());
         }
         finally{
             if(!name.equals("")) {

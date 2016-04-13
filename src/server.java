@@ -160,7 +160,8 @@ class socketThread implements Runnable
     public Thread t;
     public int ID;
     PrintStream o;
-    String name="";
+    String name;
+    boolean nameUpdated = false;
     ConnectedBy ConnectionType;
     boolean handshake = false;
     public socketThread(){
@@ -284,7 +285,7 @@ class socketThread implements Runnable
                     else
                     {
                         ConnectionType = ConnectedBy.CONSOLE;
-                        name = input;
+                        updateUserNameAs(input);
                         System.out.println(name+" connected!");
                         handShake = true;
                         pushToAllUsers(new notification(this.name + " is now connected!"));
@@ -320,8 +321,8 @@ class socketThread implements Runnable
                                 break;
                             }
                             String ms = toString(msg);
-                            if (name.equals("")) {
-                                name = ms;
+                            if (!nameUpdated) {
+                                updateUserNameAs(ms);
                                 System.out.println(name + " connected!");
                                 pushToAllUsers(new notification(ms + " is now connected!"));
                                 pushToThisUser(new notification("Connected Clients : " + getActiveUsersList()));
@@ -338,13 +339,23 @@ class socketThread implements Runnable
             System.out.println("error "+c.getMessage()+" "+c.getCause() +" "+c.getClass());
         }
         finally{
-            if(!name.equals("")) {
+            if(nameUpdated) {
                 pushToAllUsers(new notification(name + " left"));
             }
-            name="";
+            removeUserName();
             UniversalData.UsersPool.DisconnectUser(ID);
             System.out.println("Connection"+ ID +" Terminated!");
         }
+    }
+    public void updateUserNameAs(String nm)
+    {
+        this.name = nm;
+        nameUpdated = true;
+    }
+    public void removeUserName()
+    {
+        this.name=null;
+        nameUpdated = false;
     }
     public String getActiveUsersList()
     {
@@ -353,10 +364,13 @@ class socketThread implements Runnable
         for(int i=0;i<ListSize;i++) {
             int tm = UniversalData.UsersPool.ActiveUser.get(i);
             if (UniversalData.connection[tm].ID != this.ID) {
-                List = List + UniversalData.connection[tm].name;
-                List = List + ",";
+                if(UniversalData.connection[tm].nameUpdated) {
+                    List = List + UniversalData.connection[tm].name;
+                    List = List + ",";
+                }
             }
         }
+
         List = List + ".";
         return List;
     }

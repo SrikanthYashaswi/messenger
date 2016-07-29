@@ -1,6 +1,7 @@
 
 
 
+import com.sun.org.apache.xerces.internal.impl.dv.dtd.ENTITYDatatypeValidator;
 import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 import com.sun.org.apache.xerces.internal.parsers.CachingParserPool;
 
@@ -17,7 +18,7 @@ class limitExceed extends Throwable{
         System.out.println("no more connections!");
     }
 }
-enum ConnectedBy{CONSOLE,BROWSER};
+enum ConnectedBy{CONSOLE,BROWSER}
 
 class notification{
     public String text;
@@ -39,6 +40,55 @@ class message{
     public String toString()
     {
         return text;
+    }
+}
+class WebSocket{
+    public static byte[] ParseToWebSocketFrame(byte[] rawData)
+    {
+        int frameCount;
+        byte frame[]= new byte[10];
+        frame[0] =(byte)129;
+        if(rawData.length<=125)
+        {
+            frame[1] = (byte) rawData.length;
+        }
+        frameCount=2;
+        int bLength = frameCount+rawData.length;
+        byte[] reply = new byte[bLength];
+        for(int i=0;i<frameCount;i++)
+        {
+            reply[i]=frame[i];
+        }
+        for(int i=0;i<rawData.length;i++)
+        {
+            reply[i+frameCount]=rawData[i];
+        }
+        return reply;
+    }
+    public static byte[] UnMaskFrame(byte[] ch) throws Exception
+    {
+        byte mask[] = new byte[4];
+        int len = ch.length;
+        byte msg[];
+        if (len != -1) {
+            len = (byte) (ch[1] & 127);
+            msg = new byte[len];
+            int ind = 2;
+            if (len > 0) {
+                for (int i = 2; i < 2 + 4; i++) {
+                    mask[i - 2] = ch[i];
+                }
+                for (int i = 6, j = 0; i < 6 + len; i++, j++) {
+                    msg[i - 6] = (byte) (ch[i] ^ mask[j % 4]);
+                }
+                if (msg[0] == 3 && msg[1] == -23)  // socket closed by browser (strange no meaning..!)
+                {
+                    throw new Exception("Exception at Frame Unmasking");
+                }
+            }
+            return msg;
+        }
+        throw new Exception("Malfunctioned Frame");
     }
 }
 class _UsersPool{
@@ -188,24 +238,7 @@ class socketThread implements Runnable
                 }
                 if (ConnectionType == ConnectedBy.BROWSER) {
                     byte rawData[] = message.getBytes();
-                    int frameCount =0;
-                    byte frame[]= new byte[10];
-                    frame[0] =(byte)129;
-                    if(rawData.length<=125)
-                    {
-                        frame[1] = (byte) rawData.length;
-                    }
-                    frameCount=2;
-                    int bLength = frameCount+rawData.length;
-                    byte[] reply = new byte[bLength];
-                    for(int i=0;i<frameCount;i++)
-                    {
-                        reply[i]=frame[i];
-                    }
-                    for(int i=0;i<rawData.length;i++)
-                    {
-                        reply[i+frameCount]=rawData[i];
-                    }
+                    byte reply[] = WebSocket.ParseToWebSocketFrame(rawData);
                     o.write(reply);
                 }
             }
@@ -217,13 +250,11 @@ class socketThread implements Runnable
     public String toString(byte[] inp)
     {
         char sd[]= new char[inp.length];
-        int i=0;
-        for(i=0;i<inp.length;i++)
+        for(int i=0;i<inp.length;i++)
         {
             sd[i]=(char)inp[i];
         }
-        String ret = String.copyValueOf(sd);
-        return ret;
+        return String.copyValueOf(sd);
     }
     public void run()
     {
@@ -301,34 +332,20 @@ class socketThread implements Runnable
             }
             if(ConnectionType==ConnectedBy.BROWSER)
             {
-                byte mask[] = new byte[4];
-                byte msg[];
                 while(in.read(ch)!=-1) {
-                    int len = ch.length;
-                    if (len != -1) {
-                        len = (byte) (ch[1] & 127);
-                        msg = new byte[len];
-                        int ind = 2;
-                        if (len > 0) {
-                            for (int i = 2; i < 2 + 4; i++) {
-                                mask[i - 2] = ch[i];
-                            }
-                            for (int i = 6, j = 0; i < 6 + len; i++, j++) {
-                                msg[i - 6] = (byte) (ch[i] ^ mask[j % 4]);
-                            }
-                            if (msg[0] == 3 && msg[1] == -23)  // socket closed by browser (strange no meaning..!)
-                            {
-                                break;
-                            }
-                            String ms = toString(msg);
-                            if (!nameUpdated) {
-                                updateUserNameAs(ms);
-                                System.out.println(name + " connected!");
-                                pushToAllUsers(new notification(ms + " is now connected!"));
-                                pushToThisUser(new notification("Connected Clients : " + getActiveUsersList()));
-                            } else {
-                                pushToAllUsers(new message(name + " : " + ms));
-                            }
+                    String ms = toString(WebSocket.UnMaskFrame(ch));
+                    if (!nameUpdated && !ms.equals("*>/")) {
+                        updateUserNameAs(ms);
+                        System.out.println(name + " connected!");
+                        pushToAllUsers(new notification(ms + " is now connected!"));
+                        pushToThisUser(new notification("Connected Clients : " + getActiveUsersList()));
+                    } else {
+                        if(ms.equals("*>/"))
+                        {
+                            pushToAllUsers(new message("*>/"+name));
+                        }
+                        else {
+                            pushToAllUsers(new message(name+": " + ms));
                         }
                     }
                 }

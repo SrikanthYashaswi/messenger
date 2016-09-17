@@ -6,6 +6,7 @@ import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 import com.sun.org.apache.xerces.internal.parsers.CachingParserPool;
 
 import javax.naming.LimitExceededException;
+import java.nio.ByteBuffer;
 import java.security.*;
 
 import java.io.*;
@@ -43,6 +44,95 @@ class message{
     }
 }
 class WebSocket{
+    public static byte[] ParseToWebSocketFrame(byte[] rawData)
+    {
+        int frameCount=0;
+        byte frame[]= new byte[10];
+        frame[0] =(byte)129;
+        if(rawData.length<=125)
+        {
+            frame[1] = (byte) rawData.length;
+            frameCount=2;
+        }
+        else if(rawData.length>=126&&rawData.length<=65535)
+        {
+            frame[1] =(byte)126;
+            frame[2] =(byte) ((rawData.length >>8 ) & 255);
+            frame[3]= (byte) ((rawData.length ) & 255);
+            frameCount=4;
+        }
+        int bLength = frameCount+rawData.length;
+        byte[] reply = new byte[bLength];
+        for(int i=0;i<frameCount;i++)
+        {
+            reply[i]=frame[i];
+        }
+        for(int i=0;i<rawData.length;i++) {
+            reply[i + frameCount] = rawData[i];
+        }
+        return reply;
+    }
+    public static byte[] UnMaskFrame(byte[] ch) throws Exception
+    {
+        byte mask[] = new byte[4];
+        int len = ch.length;
+        byte msg[] =null;
+        if (len != -1) {
+            len = (byte) (ch[1] & 127);
+            int ind = 2;
+            int firstMask=2;
+            if (len > 0) {
+                if(len==126)
+                {
+                    len =(ch[3]&255)+(ch[2]&255)*256;
+                    firstMask = 4;
+                }
+                else if(len==127)
+                {
+                    firstMask = 10;
+                }
+                for (int i = 0; i <  4; i++)
+                {
+                    mask[i] = ch[i+firstMask];
+                }
+                msg = new byte[len];
+                for (int i = 0; i < len; i++)
+                {
+                    msg[i] = (byte) (ch[i+firstMask+4] ^ mask[i % 4]);
+                }
+                if (msg[0] == 3 && msg[1] == -23)  // socket closed by browser (strange no meaning..!)
+                {
+                    throw new Exception("Exception at Frame Unmasking");
+                }
+            }
+            return msg;
+        }
+        throw new Exception("Malfunctioned Frame");
+    }
+    public static String getWebSocketAccept(String secWebSocketKey)
+    {
+        final String webSocketMagicNumber= "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+        try {
+            String webSocketAccept = secWebSocketKey + webSocketMagicNumber;
+            MessageDigest messageDigest = MessageDigest.getInstance("SHA1");
+            byte digested[] = messageDigest.digest(webSocketAccept.getBytes());
+            return Base64.encode(digested);
+        }
+        catch (Exception c)
+        {
+            System.out.println(">>>>>>>>>>>>>>>>>>Exception at getWebSocketAccept");
+        }
+        return null;
+    }
+    public static String toString(byte[] inp) {
+        char sd[] = new char[inp.length];
+        for (int i = 0; i < inp.length; i++) {
+            sd[i] = (char) inp[i];
+        }
+        return String.copyValueOf(sd);
+    }
+}
+class WebSocket_old{
     public static byte[] ParseToWebSocketFrame(byte[] rawData)
     {
         int frameCount;
@@ -89,6 +179,21 @@ class WebSocket{
             return msg;
         }
         throw new Exception("Malfunctioned Frame");
+    }
+    public static String getWebSocketAccept(String secWebSocketKey)
+    {
+        final String webSocketMagicNumber= "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+        try {
+            String webSocketAccept = secWebSocketKey + webSocketMagicNumber;
+            MessageDigest messageDigest = MessageDigest.getInstance("SHA1");
+            byte digested[] = messageDigest.digest(webSocketAccept.getBytes());
+            return Base64.encode(digested);
+        }
+        catch (Exception c)
+        {
+            System.out.println(">>>>>>>>>>>>>>>>>>Exception at getWebSocketAccept");
+        }
+        return null;
     }
 }
 class _UsersPool{
@@ -260,15 +365,15 @@ class socketThread implements Runnable
     {
         try
         {
-            String[][] hshkMeta = new String[30][2];
-            String hmeta[] = new String [30];
+            String token[];
+            HashMap<String,String> header= new HashMap<String, String>();
             String input;
             boolean handShake = false;
             int temp = 0;
             System.out.println("NEW (" + ID +")"+ client.getInetAddress()+":"+client.getPort());
             DataInputStream d = new DataInputStream(client.getInputStream());
             InputStream in = client.getInputStream();
-            byte ch[]= new byte[1000];
+            byte ch[]= new byte[10000000];
             while((input=d.readLine())!=null)
             {
                 if(!handShake) {
@@ -276,40 +381,21 @@ class socketThread implements Runnable
                     {
                         ConnectionType = ConnectedBy.BROWSER;
                         //System.out.println("Browser Connected..");
-                        hshkMeta[0][0] = input;
                         temp++;
                         while((input=d.readLine()).equals("")!=true && temp<14)
                         {
-                            hshkMeta[temp][0] = input;
+                            System.out.println(input);
+
+                            token = input.split(": ");
+                            header.put(token[0],token[1]);
                             temp++;
                         }
-                        for(int i=1;i<temp;i++)
-                        {
-                            hshkMeta[i] = hshkMeta[i][0].split(": ");
-                        }
-                        //System.out.println("-----------------------");
-                        for(int i=1;i<temp;i++)
-                        {
-                            if(hshkMeta[i][0].equals("Sec-WebSocket-Key"))
-                            {
-                                try {
-                                    String rr = hshkMeta[i][1];
-                                    rr = rr + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-                                    MessageDigest md = MessageDigest.getInstance("SHA1");
-                                    byte x[] = rr.getBytes();
-                                    byte op[] = md.digest(x);
-                                    String encoded = Base64.encode(op);
-                                    send("HTTP/1.1 101");
-                                    send("Upgrade: websocket");
-                                    send("Connection: Upgrade");
-                                    send("Sec-WebSocket-Accept:"+encoded+"\r\n");
-                                    handshake = true;
-                                    //System.out.println("Browser Handshake Complete");
-                                }
-                                catch(NoSuchAlgorithmException c){
-                                }
-                            }
-                        }
+                        send("HTTP/1.1 101");
+                        send("Upgrade: websocket");
+                        send("Connection: Upgrade");
+                        send("Sec-WebSocket-Accept:"+WebSocket.getWebSocketAccept(header.get("Sec-WebSocket-Key"))+"\r\n");
+                        handshake = true;
+                            //System.out.println("Browser Handshake Complete");
                         handshake=true;
                         break;
                     }
@@ -354,6 +440,7 @@ class socketThread implements Runnable
         }
         catch(Exception c){
             System.out.println("error "+c.getMessage()+" "+c.getCause() +" "+c.getClass());
+            c.printStackTrace();
         }
         finally{
             if(nameUpdated) {
@@ -380,14 +467,11 @@ class socketThread implements Runnable
         int ListSize = UniversalData.UsersPool.ActiveUser.size();
         for(int i=0;i<ListSize;i++) {
             int tm = UniversalData.UsersPool.ActiveUser.get(i);
-            if (UniversalData.connection[tm].ID != this.ID) {
-                if(UniversalData.connection[tm].nameUpdated) {
-                    List = List + UniversalData.connection[tm].name;
-                    List = List + ",";
-                }
+            if (UniversalData.connection[tm].ID != this.ID && UniversalData.connection[tm].nameUpdated) {
+                List = List + UniversalData.connection[tm].name;
+                List = List + ",";
             }
         }
-
         List = List + ".";
         return List;
     }
@@ -401,7 +485,7 @@ class socketThread implements Runnable
         for(int i=0;i<UniversalData.UsersPool.ActiveUser.size();i++)
         {
             int j = UniversalData.UsersPool.ActiveUser.get(i);
-            if(UniversalData.connection[j].ID!= ID)
+            if(UniversalData.connection[j].ID!= ID && UniversalData.connection[j].nameUpdated)
             {
                 UniversalData.connection[j].send(data.toString());
             }

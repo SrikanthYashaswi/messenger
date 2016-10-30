@@ -384,8 +384,6 @@ class socketThread implements Runnable
                         temp++;
                         while((input=d.readLine()).equals("")!=true && temp<14)
                         {
-                            System.out.println(input);
-
                             token = input.split(": ");
                             header.put(token[0],token[1]);
                             temp++;

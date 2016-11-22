@@ -2,6 +2,7 @@
 <html>
 	<head>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta charset="utf-8"> vs <meta http-equiv="Content-Type">
 		<title>FrizBee</title>
 		<style>
 			body{
@@ -282,6 +283,7 @@
 		var d=false;
 		if(msg != "")
 		{
+
 			if(nameIsPresent)
 			{
 				var ms = document.createTextNode(msg);
@@ -333,5 +335,8 @@
 		//httpreq.send();
 		//initializeSocket(httpreq.responseText);
 		initializeSocket(serverIP);
+	}
+	function test(){
+	
 	}
 </script>

@@ -1,17 +1,11 @@
-
-
-
-import com.sun.org.apache.xerces.internal.impl.dv.dtd.ENTITYDatatypeValidator;
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
-import com.sun.org.apache.xerces.internal.parsers.CachingParserPool;
-
-import javax.naming.LimitExceededException;
-import java.nio.ByteBuffer;
-import java.security.*;
+import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.security.MessageDigest;
+import java.util.HashMap;
+import java.util.LinkedList;
 
 
 class limitExceed extends Throwable{
@@ -258,33 +252,7 @@ class UniversalData{
     static public _UsersPool UsersPool = new _UsersPool();
     static public boolean DEBUG = false;
 }
-class inputThread implements Runnable{
-    public Thread ioT;
-    DataInputStream ascnInp;
-    Socket Socketdetail;
-    //String
-    //boolean handshake = false;
-    public inputThread(DataInputStream inp,Socket det){
-        ascnInp = inp;
-        Socketdetail= det;
-        ioT = new Thread(this,"inputThread");
-        ioT.start();
-    }
-    public void run(){
-        try {
-         /*   if(handshake == false)      // do handshake first
-            {
 
-            }
-            else {*/
-            System.out.println(Socketdetail.getInetAddress() + ":" + Socketdetail.getPort() + " > " + ascnInp.readLine());
-            //}
-        }
-        catch(Exception d){
-            System.out.println(d.getMessage());
-        }
-    }
-}
 class outputThread implements Runnable{
 
     private BufferedReader inp = new BufferedReader(new InputStreamReader(System.in));
@@ -393,7 +361,7 @@ class socketThread implements Runnable
                         send("Connection: Upgrade");
                         send("Sec-WebSocket-Accept:"+WebSocket.getWebSocketAccept(header.get("Sec-WebSocket-Key"))+"\r\n");
                         handshake = true;
-                            //System.out.println("Browser Handshake Complete");
+                        System.out.println("Browser Handshake Complete");
                         handshake=true;
                         break;
                     }
@@ -493,7 +461,7 @@ class socketThread implements Runnable
 public class server {
     public static void main(String arg[]) throws IOException
     {
-        ServerSocket server = new ServerSocket(4444);
+        ServerSocket server = new ServerSocket(5000);
         boolean firstRun = true;
         System.out.println("Server Started");
 
@@ -519,7 +487,6 @@ public class server {
             {
                 System.out.println(d.toString());
             }
-
         }
     }
 }

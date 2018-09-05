@@ -1,16 +1,22 @@
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+
+
+
+import com.sun.org.apache.xerces.internal.impl.dv.dtd.ENTITYDatatypeValidator;
+import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
+import com.sun.org.apache.xerces.internal.parsers.CachingParserPool;
+
+import javax.naming.LimitExceededException;
+import java.nio.ByteBuffer;
+import java.security.*;
 
 import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.security.MessageDigest;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.net.*;
+import java.util.*;
 
 
 class limitExceed extends Throwable{
     public limitExceed(){
-        System.out.println("no more connections!");
+        //System.out.println("no more connections!");
     }
 }
 enum ConnectedBy{CONSOLE,BROWSER}
@@ -114,7 +120,7 @@ class WebSocket{
         }
         catch (Exception c)
         {
-            System.out.println(">>>>>>>>>>>>>>>>>>Exception at getWebSocketAccept");
+            //System.out.println(">>>>>>>>>>>>>>>>>>Exception at getWebSocketAccept");
         }
         return null;
     }
@@ -185,7 +191,7 @@ class WebSocket_old{
         }
         catch (Exception c)
         {
-            System.out.println(">>>>>>>>>>>>>>>>>>Exception at getWebSocketAccept");
+            //System.out.println(">>>>>>>>>>>>>>>>>>Exception at getWebSocketAccept");
         }
         return null;
     }
@@ -219,9 +225,9 @@ class _UsersPool{
             for (Integer UnusedSlot : UnusedSlots) {
                 d = d + UnusedSlot + " , ";
             }
-            System.out.println("on connect ");
-            System.out.println(c);
-            System.out.println(d);
+            //System.out.println("on connect ");
+            //System.out.println(c);
+            //System.out.println(d);
         }
         return slot;
     }
@@ -240,9 +246,9 @@ class _UsersPool{
             for (int j = 0; j < UnusedSlots.size(); j++) {
                 d = d + UnusedSlots.get(j) + " , ";
             }
-            System.out.println("on disconnect ");
-            System.out.println(c);
-            System.out.println(d);
+            //System.out.println("on disconnect ");
+            //System.out.println(c);
+            //System.out.println(d);
         }
     }
 }
@@ -270,9 +276,9 @@ class outputThread implements Runnable{
                 {
                     UniversalData.connection[UniversalData.UsersPool.ActiveUser.get(i)].send(msg);
                 }
-                System.out.println( "\n>>ADMIN: " + msg);
+                //System.out.println( "\n>>ADMIN: " + msg);
             } catch (Exception c) {
-                System.out.println(c.getMessage());
+                //System.out.println(c.getMessage());
             }
         }
     }
@@ -338,7 +344,7 @@ class socketThread implements Runnable
             String input;
             boolean handShake = false;
             int temp = 0;
-            System.out.println("NEW (" + ID +")"+ client.getInetAddress()+":"+client.getPort());
+            //System.out.println("NEW (" + ID +")"+ client.getInetAddress()+":"+client.getPort());
             DataInputStream d = new DataInputStream(client.getInputStream());
             InputStream in = client.getInputStream();
             byte ch[]= new byte[10000000];
@@ -361,7 +367,7 @@ class socketThread implements Runnable
                         send("Connection: Upgrade");
                         send("Sec-WebSocket-Accept:"+WebSocket.getWebSocketAccept(header.get("Sec-WebSocket-Key"))+"\r\n");
                         handshake = true;
-                        System.out.println("Browser Handshake Complete");
+                        //System.out.println("Browser Handshake Complete");
                         handshake=true;
                         break;
                     }
@@ -369,7 +375,7 @@ class socketThread implements Runnable
                     {
                         ConnectionType = ConnectedBy.CONSOLE;
                         updateUserNameAs(input);
-                        System.out.println(name+" connected!");
+                        //System.out.println(name+" connected!");
                         handShake = true;
                         pushToAllUsers(new notification(this.name + " is now connected!"));
                         pushToThisUser(new notification("Connected Clients :"+ getActiveUsersList()));
@@ -388,7 +394,7 @@ class socketThread implements Runnable
                     String ms = toString(WebSocket.UnMaskFrame(ch));
                     if (!nameUpdated && !ms.equals("*>/")) {
                         updateUserNameAs(ms);
-                        System.out.println(name + " connected!");
+                        //System.out.println(name + " connected!");
                         pushToAllUsers(new notification(ms + " is now connected!"));
                         pushToThisUser(new notification("Connected Clients : " + getActiveUsersList()));
                     } else {
@@ -405,7 +411,7 @@ class socketThread implements Runnable
             client.close();
         }
         catch(Exception c){
-            System.out.println("error "+c.getMessage()+" "+c.getCause() +" "+c.getClass());
+            //System.out.println("error "+c.getMessage()+" "+c.getCause() +" "+c.getClass());
             c.printStackTrace();
         }
         finally{
@@ -414,7 +420,7 @@ class socketThread implements Runnable
             }
             removeUserName();
             UniversalData.UsersPool.DisconnectUser(ID);
-            System.out.println("Connection"+ ID +" Terminated!");
+            //System.out.println("Connection"+ ID +" Terminated!");
         }
     }
     public void updateUserNameAs(String nm)
@@ -463,7 +469,7 @@ public class server {
     {
         ServerSocket server = new ServerSocket(5000);
         boolean firstRun = true;
-        System.out.println("Server Started");
+        //System.out.println("Server Started");
 
         for(int i=0;i<UniversalData.maxUsers;i++){
             UniversalData.connection[i] = new socketThread();
@@ -481,11 +487,11 @@ public class server {
             }
             catch (limitExceed c)
             {
-                System.out.println(c.toString());
+                //System.out.println(c.toString());
             }
             catch (IOException d)
             {
-                System.out.println(d.toString());
+                //System.out.println(d.toString());
             }
         }
     }

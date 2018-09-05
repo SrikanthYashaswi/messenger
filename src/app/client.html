@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<meta charset="utf-8"> vs <meta http-equiv="Content-Type">
-		<title>FrizBee</title>
-		<style>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>FrizBee</title>
+	<style>
 			body{
 				margin:1px;
 			}
@@ -149,28 +148,28 @@
 				font-weight:bold;
 			}
 		</style>
-	</head>
-	<body>
-		<div id ="wrapper">
-			<div id="statusBar">
-				<p id="status"></p>
-				<div id="statusLight">
-				</div>
-			</div>
-			<div id="msgPanel">
-
-			</div>
-			<div id="controlCenter">
-				<input type="text" id="input" placeholder="Write here" onkeyup="keyDetect(event)"/>
-				<button onclick="sendMsg()" id="BtnSend">Send</button>
-			</div>
+</head>
+<body>
+<div id ="wrapper">
+	<div id="statusBar">
+		<p id="status"></p>
+		<div id="statusLight">
 		</div>
-	</body>
+	</div>
+	<div id="msgPanel">
+
+	</div>
+	<div id="controlCenter">
+		<input type="text" id="input" placeholder="Write here" onkeyup="keyDetect(event)"/>
+		<button onclick="sendMsg()" id="BtnSend">Send</button>
+	</div>
+</div>
+</body>
 
 </html>
 <script>
 	var serverSocket;
-	var serverIP = "localhost";
+	var serverIP = "35.209.77.171";
 	var count=0;
 	var connectionRefresh;
 	var connected = false;
@@ -179,11 +178,9 @@
 	var reconFlag=false;
 	var toggle = true;
 	EstablishConnection();
-	Console.log()
 	function initializeSocket(address)
 	{
-		console.clear();
-		serverSocket = new WebSocket("ws://"+address+":4444");
+		serverSocket = new WebSocket("ws://"+address+":80");
 		serverSocket.onopen = function()
 		{
 			document.getElementById("statusLight").style.backgroundColor="rgb(0, 201, 0)";
@@ -197,7 +194,7 @@
 			else
 			{
 				var localMsg = document.createElement("DIV");
-				var txtNode = document.createTextNode("Enter your name :");
+				var txtNode = document.createTextNode("Hey There ! Enter your name in below BOX first :");
 				localMsg.id="notific";
 				localMsg.appendChild(txtNode);
 				document.getElementById("msgPanel").appendChild(localMsg);
@@ -330,13 +327,19 @@
 	}
 	function EstablishConnection()
 	{
-		//var httpreq = new XMLHttpRequest();
-		//httpreq.open("GET" , "http://shrk.azurewebsites.net/pingx.php",false);
-		//httpreq.send();
-		//initializeSocket(httpreq.responseText);
 		initializeSocket(serverIP);
 	}
-	function test(){
-	
+
+	function showNotification(Message){
+	    new Notification("FrizBee",{body: Message});
+	}
+
+	function initNotification(){
+    		if (!("Notification" in window)) {
+        		alert("This browser does not support system notifications");
+		}
+    		else if (Notification.permission !== 'denied') {
+		        Notification.requestPermission();
+    		}
 	}
 </script>

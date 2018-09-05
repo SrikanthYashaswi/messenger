@@ -1,12 +1,13 @@
 
 
 
-import com.sun.org.apache.xerces.internal.impl.dv.dtd.ENTITYDatatypeValidator;
 import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
-import com.sun.org.apache.xerces.internal.parsers.CachingParserPool;
+import domain.Message;
+import domain.Notification;
+import domain.UsersPool;
+import exceptions.LimitExceed;
+import util.WebSocket;
 
-import javax.naming.LimitExceededException;
-import java.nio.ByteBuffer;
 import java.security.*;
 
 import java.io.*;
@@ -14,124 +15,9 @@ import java.net.*;
 import java.util.*;
 
 
-class limitExceed extends Throwable{
-    public limitExceed(){
-        //System.out.println("no more connections!");
-    }
-}
+
 enum ConnectedBy{CONSOLE,BROWSER}
 
-class notification{
-    public String text;
-    public notification(String notifStr)
-    {
-        text = ">> "+ notifStr;
-    }
-    public String toString()
-    {
-        return text;
-    }
-}
-class message{
-    public String text;
-    public message(String msgStr)
-    {
-        text = msgStr;
-    }
-    public String toString()
-    {
-        return text;
-    }
-}
-class WebSocket{
-    public static byte[] ParseToWebSocketFrame(byte[] rawData)
-    {
-        int frameCount=0;
-        byte frame[]= new byte[10];
-        frame[0] =(byte)129;
-        if(rawData.length<=125)
-        {
-            frame[1] = (byte) rawData.length;
-            frameCount=2;
-        }
-        else if(rawData.length>=126&&rawData.length<=65535)
-        {
-            frame[1] =(byte)126;
-            frame[2] =(byte) ((rawData.length >>8 ) & 255);
-            frame[3]= (byte) ((rawData.length ) & 255);
-            frameCount=4;
-        }
-        int bLength = frameCount+rawData.length;
-        byte[] reply = new byte[bLength];
-        for(int i=0;i<frameCount;i++)
-        {
-            reply[i]=frame[i];
-        }
-        for(int i=0;i<rawData.length;i++) {
-            reply[i + frameCount] = rawData[i];
-        }
-        return reply;
-    }
-    public static byte[] UnMaskFrame(byte[] ch) throws Exception
-    {
-        byte mask[] = new byte[4];
-        int len = ch.length;
-        byte msg[] =null;
-        if (len != -1) {
-            len = (byte) (ch[1] & 127);
-            int ind = 2;
-            int firstMask=2;
-            if (len > 0) {
-                if(len==126)
-                {
-                    len =(ch[3]&255)+(ch[2]&255)*256;
-                    firstMask = 4;
-                }
-                else if(len==127)
-                {
-                    firstMask = 10;
-                }
-                for (int i = 0; i <  4; i++)
-                {
-                    mask[i] = ch[i+firstMask];
-                }
-                msg = new byte[len];
-                for (int i = 0; i < len; i++)
-                {
-                    msg[i] = (byte) (ch[i+firstMask+4] ^ mask[i % 4]);
-                }
-                if (msg[0] == 3 && msg[1] == -23)  // socket closed by browser (strange no meaning..!)
-                {
-                    throw new Exception("Exception at Frame Unmasking");
-                }
-            }
-            return msg;
-        }
-        throw new Exception("Malfunctioned Frame");
-    }
-    public static String getWebSocketAccept(String secWebSocketKey)
-    {
-        final String webSocketMagicNumber= "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-        try {
-            String webSocketAccept = secWebSocketKey + webSocketMagicNumber;
-            MessageDigest messageDigest = MessageDigest.getInstance("SHA1");
-            byte digested[] = messageDigest.digest(webSocketAccept.getBytes());
-            return Base64.encode(digested);
-        }
-        catch (Exception c)
-        {
-            //System.out.println(">>>>>>>>>>>>>>>>>>Exception at getWebSocketAccept");
-        }
-        return null;
-    }
-    public static String toString(byte[] inp) {
-        char sd[] = new char[inp.length];
-        for (int i = 0; i < inp.length; i++) {
-            sd[i] = (char) inp[i];
-        }
-        return String.copyValueOf(sd);
-    }
-}
 class WebSocket_old{
     public static byte[] ParseToWebSocketFrame(byte[] rawData)
     {
@@ -196,68 +82,6 @@ class WebSocket_old{
         return null;
     }
 }
-class _UsersPool{
-    public LinkedList<Integer> ActiveUser = new LinkedList<Integer> ();
-    LinkedList<Integer> UnusedSlots = new LinkedList<Integer> ();
-    public _UsersPool()
-    {
-        for(int i=0;i<UniversalData.maxUsers;i++)
-        {
-            UnusedSlots.add(i);
-        }
-    }
-    public int NextFreeSlot() throws limitExceed
-    {
-        if(ActiveUser.size()==UniversalData.maxUsers)
-        {
-            throw new limitExceed();
-        }
-        int  slot= UnusedSlots.getFirst();
-        ActiveUser.add(slot);
-        UnusedSlots.removeFirst();
-        if(UniversalData.DEBUG)
-        {
-            String c = "used : ";
-            String d = "unused: ";
-            for (Integer aActiveUser : ActiveUser) {
-                c = c + aActiveUser + " , ";
-            }
-            for (Integer UnusedSlot : UnusedSlots) {
-                d = d + UnusedSlot + " , ";
-            }
-            //System.out.println("on connect ");
-            //System.out.println(c);
-            //System.out.println(d);
-        }
-        return slot;
-    }
-    public void DisconnectUser(int slot)
-    {
-        Object s= slot;
-        ActiveUser.remove(s);   //directly passing slot is assumed as index and removes value at that index
-        UnusedSlots.add(slot);
-        if(UniversalData.DEBUG)
-        {
-            String c = "used : ";
-            String d = "unused: ";
-            for (int i = 0; i < ActiveUser.size(); i++) {
-                c = c + ActiveUser.get(i) + " , ";
-            }
-            for (int j = 0; j < UnusedSlots.size(); j++) {
-                d = d + UnusedSlots.get(j) + " , ";
-            }
-            //System.out.println("on disconnect ");
-            //System.out.println(c);
-            //System.out.println(d);
-        }
-    }
-}
-class UniversalData{
-    static public final int maxUsers=60000;
-    static public socketThread connection[] = new socketThread[UniversalData.maxUsers];
-    static public _UsersPool UsersPool = new _UsersPool();
-    static public boolean DEBUG = false;
-}
 
 class outputThread implements Runnable{
 
@@ -272,9 +96,9 @@ class outputThread implements Runnable{
         while(true) {
             try {
                 String msg = inp.readLine();
-                for(int i=0;i<UniversalData.UsersPool.ActiveUser.size();i++)
+                for(int i = 0; i<UniversalData.usersPool.ActiveUser.size(); i++)
                 {
-                    UniversalData.connection[UniversalData.UsersPool.ActiveUser.get(i)].send(msg);
+                    UniversalData.connection[UniversalData.usersPool.ActiveUser.get(i)].send(msg);
                 }
                 //System.out.println( "\n>>ADMIN: " + msg);
             } catch (Exception c) {
@@ -377,14 +201,14 @@ class socketThread implements Runnable
                         updateUserNameAs(input);
                         //System.out.println(name+" connected!");
                         handShake = true;
-                        pushToAllUsers(new notification(this.name + " is now connected!"));
-                        pushToThisUser(new notification("Connected Clients :"+ getActiveUsersList()));
+                        pushToAllUsers(new Notification(this.name + " is now connected!"));
+                        pushToThisUser(new Notification("Connected Clients :"+ getActiveUsersList()));
                     }
                 }
                 else
                 {
                     if(ConnectionType==ConnectedBy.CONSOLE) {
-                        pushToAllUsers(new message(name + " : " + input));
+                        pushToAllUsers(new Message(name + " : " + input));
                     }
                 }
             }
@@ -395,15 +219,15 @@ class socketThread implements Runnable
                     if (!nameUpdated && !ms.equals("*>/")) {
                         updateUserNameAs(ms);
                         //System.out.println(name + " connected!");
-                        pushToAllUsers(new notification(ms + " is now connected!"));
-                        pushToThisUser(new notification("Connected Clients : " + getActiveUsersList()));
+                        pushToAllUsers(new Notification(ms + " is now connected!"));
+                        pushToThisUser(new Notification("Connected Clients : " + getActiveUsersList()));
                     } else {
                         if(ms.equals("*>/"))
                         {
-                            pushToAllUsers(new message("*>/"+name));
+                            pushToAllUsers(new Message("*>/"+name));
                         }
                         else {
-                            pushToAllUsers(new message(name+": " + ms));
+                            pushToAllUsers(new Message(name+": " + ms));
                         }
                     }
                 }
@@ -416,10 +240,10 @@ class socketThread implements Runnable
         }
         finally{
             if(nameUpdated) {
-                pushToAllUsers(new notification(name + " left"));
+                pushToAllUsers(new Notification(name + " left"));
             }
             removeUserName();
-            UniversalData.UsersPool.DisconnectUser(ID);
+            UniversalData.usersPool.DisconnectUser(ID);
             //System.out.println("Connection"+ ID +" Terminated!");
         }
     }
@@ -436,9 +260,9 @@ class socketThread implements Runnable
     public String getActiveUsersList()
     {
         String List="";
-        int ListSize = UniversalData.UsersPool.ActiveUser.size();
+        int ListSize = UniversalData.usersPool.ActiveUser.size();
         for(int i=0;i<ListSize;i++) {
-            int tm = UniversalData.UsersPool.ActiveUser.get(i);
+            int tm = UniversalData.usersPool.ActiveUser.get(i);
             if (UniversalData.connection[tm].ID != this.ID && UniversalData.connection[tm].nameUpdated) {
                 List = List + UniversalData.connection[tm].name;
                 List = List + ",";
@@ -454,9 +278,9 @@ class socketThread implements Runnable
     public void pushToAllUsers(Object data)
     {
         if(!data.toString().equals(""))
-        for(int i=0;i<UniversalData.UsersPool.ActiveUser.size();i++)
+        for(int i = 0; i<UniversalData.usersPool.ActiveUser.size(); i++)
         {
-            int j = UniversalData.UsersPool.ActiveUser.get(i);
+            int j = UniversalData.usersPool.ActiveUser.get(i);
             if(UniversalData.connection[j].ID!= ID && UniversalData.connection[j].nameUpdated)
             {
                 UniversalData.connection[j].send(data.toString());
@@ -469,7 +293,6 @@ public class server {
     {
         ServerSocket server = new ServerSocket(80);
         boolean firstRun = true;
-        //System.out.println("Server Started");
 
         for(int i=0;i<UniversalData.maxUsers;i++){
             UniversalData.connection[i] = new socketThread();
@@ -478,14 +301,10 @@ public class server {
         {
             try {
                 Socket client = server.accept();
-                int FreeSlot = UniversalData.UsersPool.NextFreeSlot();
+                int FreeSlot = UniversalData.usersPool.NextFreeSlot();
                 UniversalData.connection[FreeSlot] = new socketThread(client, "ConnectionThread "+FreeSlot, FreeSlot);
-                if (firstRun) {
-                    //new outputThread();
-                    firstRun = false;
-                }
             }
-            catch (limitExceed c)
+            catch (LimitExceed c)
             {
                 //System.out.println(c.toString());
             }

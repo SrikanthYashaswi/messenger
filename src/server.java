@@ -481,7 +481,7 @@ public class server {
                 int FreeSlot = UniversalData.UsersPool.NextFreeSlot();
                 UniversalData.connection[FreeSlot] = new socketThread(client, "ConnectionThread "+FreeSlot, FreeSlot);
                 if (firstRun) {
-                    new outputThread();
+                    //new outputThread();
                     firstRun = false;
                 }
             }

@@ -467,7 +467,7 @@ class socketThread implements Runnable
 public class server {
     public static void main(String arg[]) throws IOException
     {
-        ServerSocket server = new ServerSocket(5000);
+        ServerSocket server = new ServerSocket(80);
         boolean firstRun = true;
         //System.out.println("Server Started");
 

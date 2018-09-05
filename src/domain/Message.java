@@ -1,7 +1,13 @@
 package domain;
 
-/**
- * Created by shrk on 06/09/18.
- */
 public class Message {
+    public String text;
+    public Message(String msgStr)
+    {
+        text = msgStr;
+    }
+    public String toString()
+    {
+        return text;
+    }
 }

@@ -1,7 +1,14 @@
 package domain;
 
-/**
- * Created by shrk on 06/09/18.
- */
+
 public class Notification {
+    public String text;
+    public Notification(String notifStr)
+    {
+        text = ">> "+ notifStr;
+    }
+    public String toString()
+    {
+        return text;
+    }
 }

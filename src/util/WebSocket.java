@@ -1,12 +1,9 @@
-package domain;
+package util;
 
 import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 
 import java.security.MessageDigest;
 
-/**
- * Created by shrk on 06/09/18.
- */
 public class WebSocket{
     public static byte[] ParseToWebSocketFrame(byte[] rawData)
     {

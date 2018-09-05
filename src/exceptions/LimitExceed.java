@@ -1,7 +1,7 @@
 package exceptions;
 
-/**
- * Created by shrk on 06/09/18.
- */
-public class LimitExceed {
+public class LimitExceed extends Throwable{
+    public LimitExceed(){
+        //System.out.println("no more connections!");
+    }
 }

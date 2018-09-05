@@ -1,7 +1,3 @@
 package domain;
 
-/**
- * Created by shrk on 06/09/18.
- */
-public enum ConnectedBy {
-}
+public enum ConnectedBy{CONSOLE,BROWSER}

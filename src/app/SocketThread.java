@@ -1,5 +1,6 @@
 package app;
 
+import domain.ConnectedBy;
 import domain.Message;
 import domain.Notification;
 import domain.UniversalData;

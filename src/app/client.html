@@ -169,7 +169,7 @@
 </html>
 <script>
 	var serverSocket;
-	var serverIP = "35.209.77.171";
+	var serverIP = "localhost";
 	var count=0;
 	var connectionRefresh;
 	var connected = false;
@@ -180,7 +180,7 @@
 	EstablishConnection();
 	function initializeSocket(address)
 	{
-		serverSocket = new WebSocket("ws://"+address+":80");
+		serverSocket = new WebSocket("ws://"+address+":8080");
 		serverSocket.onopen = function()
 		{
 			document.getElementById("statusLight").style.backgroundColor="rgb(0, 201, 0)";

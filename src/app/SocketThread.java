@@ -1,31 +1,33 @@
 package app;
 
-import domain.ConnectedBy;
-import domain.Message;
-import domain.Notification;
-import domain.UniversalData;
-import util.WebSocket;
-
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.util.HashMap;
 
-/**
- * Created by shrk on 06/09/18.
- */
+import domain.ConnectedBy;
+import domain.Message;
+import domain.Notification;
+import domain.UniversalData;
+import exceptions.ConnectionTerminated;
+import net.http.Method;
+import net.http.Request;
+import net.http.RequestReader;
+import net.ws.WebSocket;
+
 public class SocketThread implements Runnable
 {
-    Socket client;
-    public Thread t;
-    public int ID;
-    PrintStream o;
-    String name;
-    boolean nameUpdated = false;
-    ConnectedBy ConnectionType;
-    boolean handshake = false;
-    public SocketThread(){
+    private Socket client;
+    private Thread t;
+    private int ID;
+    private PrintStream o;
+    private String name;
+    private boolean nameUpdated = false;
+    private ConnectedBy ConnectionType;
+    private boolean handshake = false;
+    SocketThread(){
 
     }
     public SocketThread(Socket inpSk, String name, int d)
@@ -67,7 +69,95 @@ public class SocketThread implements Runnable
         }
         return String.copyValueOf(sd);
     }
-    public void run()
+
+
+    void exec() throws IOException,ConnectionTerminated{
+		InputStream reqStream;
+		reqStream = client.getInputStream();
+		byte ch[]= new byte[10000000];
+		
+		if(!handshake){
+			int length = reqStream.available();	
+			String body = RequestReader.readStream(reqStream, length);
+			Request request = Request.parse(body);
+        	doHandshake(request);
+        }
+		
+		
+		if(handshake && ConnectionType == ConnectedBy.BROWSER){
+			
+		}
+		
+		if(handshake && ConnectionType ==ConnectedBy.CONSOLE){
+			int first ;
+			while(true){
+				
+				first = reqStream.read();
+				if(first == -1){
+					throw new ConnectionTerminated();
+				}
+				
+				String message = ((char)first + RequestReader.readStream(reqStream, reqStream.available())).replace("\r\n", "");
+				
+				if(nameUpdated){
+					pushToAllUsers(name+" : "+message);
+				}
+				else{
+					if(message.matches("")){
+						pushToThisUser(new Notification("Blank names are not accepted, Pls enter name properly:"));
+					}
+					else{
+						updateUserNameAs(message);
+						pushToThisUser(new Notification("Connected Clients : " + getActiveUsersList()));	
+					}
+				}
+			}
+		}
+	}    
+    
+    void doHandshake(Request request){
+    	if(request.getMethod() == Method.GET){
+            ConnectionType = ConnectedBy.BROWSER;
+            send("HTTP/1.1 101");
+            send("Upgrade: websocket");
+            send("Connection: Upgrade");
+            send("Sec-WebSocket-Accept:"+WebSocket.getWebSocketAccept(request.getHeaders().get("Sec-WebSocket-Key"))+"\r\n");
+            handshake = true;
+        }
+    	if(request.getMethod() == Method.STREAM){
+    		ConnectionType = ConnectedBy.CONSOLE;
+    		pushToThisUser(new Notification("Who are you?"));
+    		handshake = true;
+    	}
+    }
+
+    public void run(){
+    	try{
+    		exec();
+    	}
+		catch(IOException | ConnectionTerminated c){
+			c.printStackTrace();
+		}
+		finally{
+			close();
+			if(nameUpdated) {
+				pushToAllUsers(new Notification(name + " left"));
+			}
+			removeUserName();
+			UniversalData.usersPool.DisconnectUser(ID);
+	     }
+    }
+    
+    private void close(){
+    	try{
+    		client.close();
+    	}
+    	catch(IOException c){
+    		
+    	}
+    }
+
+    public void runs()
     {
         try
         {
@@ -155,6 +245,8 @@ public class SocketThread implements Runnable
             //System.out.println("Connection"+ ID +" Terminated!");
         }
     }
+
+
     public void updateUserNameAs(String nm)
     {
         this.name = nm;

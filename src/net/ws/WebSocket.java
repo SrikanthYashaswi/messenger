@@ -1,8 +1,8 @@
-package util;
-
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
+package net.ws;
 
 import java.security.MessageDigest;
+
+import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 
 public class WebSocket{
     public static byte[] ParseToWebSocketFrame(byte[] rawData)

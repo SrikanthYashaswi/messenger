@@ -202,7 +202,9 @@
 		}
 		serverSocket.onclose = function()
 		{
+			console.log("closed!");	
 			connected = false;
+			return;
 			if(reconFlag==true){
 				if(toggle)
 				{
@@ -271,7 +273,7 @@
 		}
 		serverSocket.onerror = function(et)
 		{
-			console.clear();
+			//console.clear();
 		}
 	}
 	function sendMsg()

@@ -1,14 +1,21 @@
 package net.ws;
 
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 
+import exceptions.MalfunctionedFrame;
+
 public class WebSocket{
-    public static byte[] ParseToWebSocketFrame(byte[] rawData)
+	
+	private WebSocket(){
+		
+	}
+    public static byte[] toWSFrame(byte[] rawData)
     {
         int frameCount=0;
-        byte frame[]= new byte[10];
+        byte[] frame= new byte[10];
         frame[0] =(byte)129;
         if(rawData.length<=125)
         {
@@ -33,14 +40,20 @@ public class WebSocket{
         }
         return reply;
     }
-    public static byte[] UnMaskFrame(byte[] ch) throws Exception
+    
+    /**
+     * Algorithm to unmask a websocket frame
+     * @param ch
+     * @return
+     * @throws MalfunctionedFrame
+     */
+    public static String unMaskFrame(byte[] ch) throws MalfunctionedFrame
     {
-        byte mask[] = new byte[4];
+        byte[] mask = new byte[4];
         int len = ch.length;
-        byte msg[] =null;
+        byte[] msg = null;
         if (len != -1) {
             len = (byte) (ch[1] & 127);
-            int ind = 2;
             int firstMask=2;
             if (len > 0) {
                 if(len==126)
@@ -63,30 +76,25 @@ public class WebSocket{
                 }
                 if (msg[0] == 3 && msg[1] == -23)  // socket closed by browser (strange no meaning..!)
                 {
-                    throw new Exception("Exception at Frame Unmasking");
+                    throw new MalfunctionedFrame();
                 }
             }
-            return msg;
+            return (msg != null) ? byteToString(msg) : null;
         }
-        throw new Exception("Malfunctioned Frame");
+        throw new MalfunctionedFrame();
     }
-    public static String getWebSocketAccept(String secWebSocketKey)
+    
+    public static String getWebSocketAccept(String secWebSocketKey) throws NoSuchAlgorithmException
     {
         final String webSocketMagicNumber= "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-        try {
-            String webSocketAccept = secWebSocketKey + webSocketMagicNumber;
-            MessageDigest messageDigest = MessageDigest.getInstance("SHA1");
-            byte digested[] = messageDigest.digest(webSocketAccept.getBytes());
-            return Base64.encode(digested);
-        }
-        catch (Exception c)
-        {
-            //System.out.println(">>>>>>>>>>>>>>>>>>Exception at getWebSocketAccept");
-        }
-        return null;
+        String webSocketAccept = secWebSocketKey + webSocketMagicNumber;
+        MessageDigest messageDigest = MessageDigest.getInstance("SHA1");
+        byte[] digested = messageDigest.digest(webSocketAccept.getBytes());
+        return Base64.encode(digested);
     }
-    public static String toString(byte[] inp) {
-        char sd[] = new char[inp.length];
+    
+    public static String byteToString(byte[] inp) {
+        char[] sd = new char[inp.length];
         for (int i = 0; i < inp.length; i++) {
             sd[i] = (char) inp[i];
         }

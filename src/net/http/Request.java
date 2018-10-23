@@ -8,11 +8,10 @@ public class Request {
     private String url;
     private String version;
 
-    private Map<String,String> headers = new HashMap<String, String>();
+    private Map<String,String> headers = new HashMap<>();
 
     public void setRequestHead(String head){
-        String blocks[] = head.split(" ");
-        System.out.println(blocks.length);
+        String[] blocks = head.split(" ");
         if(blocks.length < 3){
             method = Method.STREAM;
             return;
@@ -41,7 +40,7 @@ public class Request {
     }
     
     public static Request parse(String body){
-		String blocks[] = body.split("\n");
+		String[] blocks = body.split("\n");
     	Request filler = new Request();
     	boolean first = true;
     	for(String block: blocks){
@@ -49,9 +48,9 @@ public class Request {
                 filler.setRequestHead(block);
                 first = false;
             }
-            String keyValue[] = block.split(":");
+            String[] keyValue = block.split(":");
             if(keyValue.length == 2){
-            	filler.updateHeader(keyValue[0],keyValue[1]);
+            	filler.updateHeader(keyValue[0],keyValue[1].trim());
             }
         }
         return filler;

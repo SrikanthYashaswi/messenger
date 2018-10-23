@@ -44,14 +44,16 @@ public class ConcurrentServerTest {
 	
 	public static void main() throws IOException{
 		new SimpleThread();
-		testReply();
-		
+		testReply();	
 	}
 	
 	public static void testReply() throws IOException{
-		Socket client = new Socket("localhost",Properties.PORT);
-		String initialMessage = RequestReader.readStream(client.getInputStream(), client.getInputStream().available());
-		g.assertTrue("first message", "Who are you", initialMessage);
+		
+		try(Socket client = new Socket("localhost",Properties.PORT)){
+			String initialMessage = RequestReader.readStream(client.getInputStream(), client.getInputStream().available());
+			g.assertTrue("first message", "Who are you", initialMessage);
+		}
+		
 	}
 	
 	

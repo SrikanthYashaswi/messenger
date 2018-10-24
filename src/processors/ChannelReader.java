@@ -44,6 +44,7 @@ public class ChannelReader implements Runnable{
 		}
 		catch(IOException | MalfunctionedFrame | NoSuchAlgorithmException c){
 			flushUser.push(index);
+			System.out.println(user.name +" flushed.");
 		}
 	}
 }

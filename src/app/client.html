@@ -150,6 +150,10 @@
 		</style>
 </head>
 <body>
+<div id="online">
+<strong>Online: </strong>
+<span id="online_list"></span>
+</div>
 <div id ="wrapper">
 	<div id="statusBar">
 		<p id="status"></p>
@@ -164,6 +168,7 @@
 		<button onclick="sendMsg()" id="BtnSend">Send</button>
 	</div>
 </div>
+
 </body>
 
 </html>
@@ -190,14 +195,6 @@
 			if(nameIsPresent)
 			{
 				serverSocket.send(userName);
-			}
-			else
-			{
-				var localMsg = document.createElement("DIV");
-				var txtNode = document.createTextNode("Hey There ! Enter your name in below BOX first :");
-				localMsg.id="notific";
-				localMsg.appendChild(txtNode);
-				document.getElementById("msgPanel").appendChild(localMsg);
 			}
 		}
 		serverSocket.onclose = function()
@@ -241,11 +238,12 @@
 			var ms;
 			var notf;
 			var otrUserCard = document.createElement("DIV");
-			if(msgTxt.indexOf(">>")==0)
+			if(msgTxt.indexOf("@online")==0)
 			{
-				otrUserCard.id="notific";
-				notf=true;
-				ms = document.createTextNode(msgTxt.substring(2));
+				var user_list = msgTxt.split("@online : ")[1];
+				document.getElementById('online_list').innerHTML = user_list;
+				console.log("hell");
+				return ;
 			}
 			else{
 				otrUserCard.id="otherUser";
@@ -282,7 +280,6 @@
 		var d=false;
 		if(msg != "")
 		{
-
 			if(nameIsPresent)
 			{
 				var ms = document.createTextNode(msg);

@@ -11,6 +11,7 @@ public class Shared {
 	public static List<User> clients = new ArrayList<>();
 	public static Map<String,Integer> groups = new HashMap<>();
 	static int harmony = 0;
+	public static String userListCsv = null; 
 	
 	static{
 		addNewGroup("harmony");

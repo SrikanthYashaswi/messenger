@@ -30,6 +30,10 @@ public class User{
 		determineConnectionType();
 	}
 	
+	public void sayEvent(String eventName, String message) throws IOException {
+		say("@"+eventName+" : "+message);
+	}
+	
 	public void systemSays(String message) throws IOException{
 		say(SYSTEM_ICON+message);
 	}

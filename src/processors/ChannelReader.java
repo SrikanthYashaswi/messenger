@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.StringJoiner;
 
 import domain.ConnectedBy;
 import domain.Shared;
@@ -18,9 +19,18 @@ public class ChannelReader implements Runnable{
 	@Override
 	public void run() {
 		int maxSize = Shared.clients.size();
+		StringJoiner joiner = new StringJoiner(",");
 		for(int i=0 ; i < maxSize ; i++){
-			queryClient(Shared.clients.get(i), i);
+			
+			User user = Shared.clients.get(i);
+			
+			queryClient(user, i);
+			
+			if(user.name!=null)
+				joiner.add(user.name);
 		}
+		
+		Shared.userListCsv = joiner.toString();
 		
 		while(!flushUser.isEmpty()){
 			int id = flushUser.pop();

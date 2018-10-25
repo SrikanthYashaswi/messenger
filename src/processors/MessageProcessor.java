@@ -18,7 +18,11 @@ public class MessageProcessor {
 			return;
 		}
 		if(user.name == null){
-			user.setUsername(message);
+			if(message.charAt(0) == '@'){
+				user.systemSays("Hey Z0^^B!#.Woo cant have username with @, tell your actual name 🙄");
+				return;
+			}
+			user.setUsername(message);			
 			return;
 		}
 		
@@ -43,5 +47,11 @@ public class MessageProcessor {
 				}
 			}
 		}
+	}
+	
+	public static void updateOnlineUsers() throws IOException{
+		for(User u : Shared.clients){
+			u.sayEvent("online", Shared.userListCsv);
+		}	
 	}
 }

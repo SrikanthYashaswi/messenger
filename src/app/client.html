@@ -182,6 +182,8 @@
 	var nameIsPresent = false;
 	var reconFlag=false;
 	var toggle = true;
+	var focussed = true;
+	var inBlurMessageCount = 0;
 	EstablishConnection();
 	function initializeSocket(address)
 	{
@@ -242,7 +244,6 @@
 			{
 				var user_list = msgTxt.split("@online : ")[1];
 				document.getElementById('online_list').innerHTML = user_list;
-				console.log("hell");
 				return ;
 			}
 			else{
@@ -259,6 +260,7 @@
 			var itm = document.getElementById("msgPanel");
 			itm.scrollTop = itm.scrollHeight;
 			otrUserCard.style.opacity = 1;
+			detectFocusAndDoAction();
 			if(notf==false)
 			{
 				otrUserCard.style.marginLeft="20px";
@@ -341,4 +343,16 @@
 		        Notification.requestPermission();
     		}
 	}
+	
+	function detectFocusAndDoAction(){
+		console.log('hello');
+		
+		if(!document.hasFocus()){
+			document.title ="* "+ (++inBlurMessageCount)+" New!";
+		}
+	}
+	window.onfocus = function () { 
+		document.title = 'FrizBee';
+		inBlurMessageCount = 0;
+	}; 
 </script>

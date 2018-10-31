@@ -23,7 +23,7 @@ public class ConcurrentServer {
 		
 	public static void main(String[] arg) throws IOException, InterruptedException
 	{
-		new ConcurrentServer().start(80);
+		new ConcurrentServer().start(7070);
 	}
 	
 	public void start(int port) throws IOException, InterruptedException{

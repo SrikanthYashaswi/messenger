@@ -28,6 +28,7 @@ public class User{
 		this.groupId = Shared.harmony;
 		this.uniqueId = nextId++;
 		determineConnectionType();
+		print();
 	}
 	
 	public void sayEvent(String eventName, String message) throws IOException {
@@ -125,6 +126,6 @@ public class User{
 	
 	
 	public void print(){
-		System.out.println("connection type:"+connectionType+";handshake: "+handshakeDone+"; name:"+this.name);
+		System.out.println("ip:"+client.getInetAddress()+"connection type:"+connectionType+";handshake: "+handshakeDone+"; name:"+this.name);
 	}
 }

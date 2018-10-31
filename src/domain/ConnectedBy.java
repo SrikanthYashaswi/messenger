@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
 
 import exceptions.MalfunctionedFrame;
-import net.http.Method;
 import net.http.Request;
 import net.http.RequestReader;
 import processors.MessageProcessor;
@@ -16,13 +15,6 @@ public enum ConnectedBy{
 		@Override
 		public void handle(User user) throws IOException, MalfunctionedFrame {
 			String userSays = user.whatSaying();
-			
-			Request request = Request.parse(userSays);
-			if(Method.GET.equals(request.getMethod()) || "HTTP/1.1".equals(request.getVersion()) ) 
-			{
-				throw new IOException("Channel Closed");	
-			}
-			
 			MessageProcessor.processMessage(user,userSays);
 		}
 	},

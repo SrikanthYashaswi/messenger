@@ -42,7 +42,6 @@ public enum ConnectedBy{
 					user.doWebsocketHandshake(request);
 				}
 				else{
-					user.sendOk();
 					inputStream.close();
 					throw new IOException("Channel closed");
 				}

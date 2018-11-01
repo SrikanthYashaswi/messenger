@@ -114,6 +114,12 @@ public class User{
 		doHandshake();
 	}
 	
+	public void sendOk() throws IOException
+	{
+		say("HTTP/1.1 200");
+		say("Connection: close");
+	}
+	
 	public void setConnectionType(ConnectedBy conn) throws IOException{
 		this.connectionType = conn;
 		systemSays("Who are you");

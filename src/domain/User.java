@@ -117,7 +117,7 @@ public class User{
 	public void sendOk() throws IOException
 	{
 		say("HTTP/1.1 200");
-		say("Connection: close");
+		say("Connection: close\r\n");
 	}
 	
 	public void setConnectionType(ConnectedBy conn) throws IOException{
@@ -129,8 +129,7 @@ public class User{
 		this.name = name;
 		welcomeMessage();
 	}
-	
-	
+
 	public void print(){
 		System.out.println("ip:"+client.getInetAddress()+"connection type:"+connectionType+";handshake: "+handshakeDone+"; name:"+this.name);
 	}

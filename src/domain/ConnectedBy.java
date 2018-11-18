@@ -36,12 +36,15 @@ public enum ConnectedBy{
 			if(!user.handshakeDone){
 				
 				String message = RequestReader.readStream(inputStream, inputStream.available());
+				
+				System.out.println(message);
 				Request request = Request.parse(message);
 				
 				if(request.getHeaders().containsKey("Upgrade")){
 					user.doWebsocketHandshake(request);
 				}
 				else{
+					user.sendOk();
 					inputStream.close();
 					throw new IOException("Channel closed");
 				}

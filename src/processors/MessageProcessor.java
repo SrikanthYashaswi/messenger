@@ -2,6 +2,7 @@ package processors;
 
 import java.io.IOException;
 
+import domain.ConnectedBy;
 import domain.Shared;
 import domain.User;
 import exceptions.MalfunctionedFrame;
@@ -51,7 +52,8 @@ public class MessageProcessor {
 	
 	public static void updateOnlineUsers() throws IOException{
 		for(User u : Shared.clients){
-			u.sayEvent("online", Shared.userListCsv);
+			if(!u.getConnectionType().equals(ConnectedBy.CONSOLE))
+				u.sayEvent("online", Shared.userListCsv);
 		}	
 	}
 }

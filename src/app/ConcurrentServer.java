@@ -23,7 +23,15 @@ public class ConcurrentServer {
 		
 	public static void main(String[] arg) throws IOException, InterruptedException
 	{
-		new ConcurrentServer().start(8080);
+		int port;
+		if(arg.length == 0){
+			port = 8080;
+		}
+		else{
+			port = Integer.parseInt(arg[0]);
+		}
+		
+		new ConcurrentServer().start(port);
 	}
 	
 	public void start(int port) throws IOException, InterruptedException{

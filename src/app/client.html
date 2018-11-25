@@ -150,6 +150,10 @@
 		</style>
 </head>
 <body>
+<audio id="myAudio">
+  <source src="https://bigsoundbank.com/UPLOAD/ogg/1108.ogg" type="audio/ogg">
+</audio>
+
 <div id="online">
 <strong>Online: </strong>
 <span id="online_list"></span>
@@ -203,7 +207,6 @@
 		{
 			console.log("closed!");	
 			connected = false;
-			return;
 			if(reconFlag==true){
 				if(toggle)
 				{
@@ -349,6 +352,7 @@
 		
 		if(!document.hasFocus()){
 			document.title ="* "+ (++inBlurMessageCount)+" New!";
+			document.getElementById("myAudio").play();
 		}
 	}
 	window.onfocus = function () { 

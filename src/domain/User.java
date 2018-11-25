@@ -20,6 +20,7 @@ public class User{
 	public int uniqueId = -1;
 	private ConnectedBy connectionType = null;
 	public int groupId;
+	private int idleTime = 0;
 	
 	public boolean handshakeDone = false;
 	
@@ -131,6 +132,26 @@ public class User{
 	}
 
 	public void print(){
-		System.out.println("ip:"+client.getInetAddress()+"connection type:"+connectionType+";handshake: "+handshakeDone+"; name:"+this.name);
+		System.out.println("ip:"+client.getInetAddress()+"connection type:"+connectionType+";handshake: "+handshakeDone+"; name:"+this.name+"; idleTime:"+this.idleTime);
+	}
+	
+	public void increaseIdleTime(){
+		idleTime++;
+	}
+	
+	public int getIdleTime(){
+		return idleTime;
+	}
+	
+	public void resetIdleTime(){
+		idleTime = 0;
+	}
+	
+	public void bye(){
+		try {
+			client.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

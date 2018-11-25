@@ -28,12 +28,17 @@ public class ChannelReader implements Runnable{
 			
 			if(user.name!=null)
 				joiner.add(user.name);
+			
+			if(user.getIdleTime() >= 1800000){
+				flushUser.push(i);
+			}
 		}
 		
 		Shared.userListCsv = joiner.toString();
 		
 		while(!flushUser.isEmpty()){
 			int id = flushUser.pop();
+			Shared.clients.get(id).bye();
 			Shared.clients.remove(id);
 		}
 	}
@@ -42,7 +47,8 @@ public class ChannelReader implements Runnable{
 		try {
 			InputStream inputStream = user.client.getInputStream();
 			
-			if( inputStream.available() <= 0 ){
+			if( inputStream.available() <= 0 ){	
+				user.increaseIdleTime();
 				return;
 			}
 			
@@ -51,6 +57,8 @@ public class ChannelReader implements Runnable{
 			connection.handle(user);
 
 			user.print();
+			
+			user.resetIdleTime();
 		}
 		catch(IOException | MalfunctionedFrame | NoSuchAlgorithmException c){
 			flushUser.push(index);

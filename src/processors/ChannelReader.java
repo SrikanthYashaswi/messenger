@@ -48,7 +48,7 @@ public class ChannelReader implements Runnable{
 				joiner.add(user.name);
 			}
 				
-			if(user.getIdleTime() >= 5000)
+			if(user.getIdleTime() >= 1800000)
 			{
 				flushUser.push(i);
 			}

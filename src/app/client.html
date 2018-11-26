@@ -147,6 +147,10 @@
 				font-family:arial;
 				font-weight:bold;
 			}
+			#typingUsers{
+				font-family: monospace;
+	    		font-size: 12px;
+    		}
 		</style>
 </head>
 <body>
@@ -166,6 +170,9 @@
 	</div>
 	<div id="msgPanel">
 
+	</div>
+	<div id="typingUsers">
+	 
 	</div>
 	<div id="controlCenter">
 		<input type="text" id="input" placeholder="Write here" onkeyup="keyDetect(event)"/>
@@ -189,6 +196,7 @@
 	var focussed = true;
 	var inBlurMessageCount = 0;
 	EstablishConnection();
+	var typingUsers = {};
 	function initializeSocket(address)
 	{
 		serverSocket = new WebSocket("ws://"+address+":8080");
@@ -249,11 +257,24 @@
 				document.getElementById('online_list').innerHTML = user_list;
 				return ;
 			}
+			else if(msgTxt.indexOf('@typing') == 0)
+			{
+				var user = msgTxt.split('@typing:')[1];
+				if(user != userName)
+				{
+					typingUsers[user] = getTime();	
+				}
+				return;
+			}
 			else{
-				otrUserCard.id="otherUser";
+				otrUserCard.id="otherUser";				
 				notf=false;
 				ms = document.createTextNode(msgTxt);
 			}
+			
+			var user = msgTxt.split(':')[0].trim();
+			delete typingUsers[user];
+			
 			var crd = document.createElement("DIV");
 			crd.id="card";
 			otrUserCard.appendChild(ms);
@@ -267,7 +288,7 @@
 			if(notf==false)
 			{
 				otrUserCard.style.marginLeft="20px";
-			}
+			}			
 			else
 			{
 				otrUserCard.style.marginLeft = "auto";
@@ -276,7 +297,7 @@
 		}
 		serverSocket.onerror = function(et)
 		{
-			//console.clear();
+			
 		}
 	}
 	function sendMsg()
@@ -328,10 +349,16 @@
 		{
 			sendMsg();
 		}
+		else{
+			if(userName != ""){
+				serverSocket.send('@typing:'+userName);	
+			}
+		}
 	}
 	function EstablishConnection()
 	{
 		initializeSocket(serverIP);
+		keepRefreshingTypingUsers();
 	}
 
 	function showNotification(Message){
@@ -348,12 +375,35 @@
 	}
 	
 	function detectFocusAndDoAction(){
-		console.log('hello');
-		
 		if(!document.hasFocus()){
 			document.title ="* "+ (++inBlurMessageCount)+" New!";
 			document.getElementById("myAudio").play();
 		}
+	}
+	
+	function keepRefreshingTypingUsers(){
+		var holder = document.getElementById("typingUsers"); 
+		setInterval(function(){
+			var users = Object.keys(typingUsers);
+			
+			if(users.length > 0){
+				holder.innerHTML = users.join(',') + " typing...";	
+			}
+			else{
+				holder.innerHTML = ".";
+			}
+			
+			for(var user in typingUsers){
+				if(getTime() - typingUsers[user] > 500){
+					delete typingUsers[user];
+				}
+			}
+		},300);
+	}
+	
+	function getTime()
+	{
+		return Math.round((new Date()).getTime());
 	}
 	window.onfocus = function () { 
 		document.title = 'FrizBee';

@@ -38,6 +38,15 @@ public class MessageProcessor {
 				user.systemSays("Hey Z0^^B!#.Man should nt give blank group names");
 			}
 		}
+		else if(message.startsWith("@typing")){
+			for(User u: Shared.clients){
+				if(u.uniqueId == user.uniqueId)
+					continue;
+				if(user.groupId == u.groupId){
+					u.say(message);
+				}
+			}
+		}
 		else
 		{
 			for(User u: Shared.clients){

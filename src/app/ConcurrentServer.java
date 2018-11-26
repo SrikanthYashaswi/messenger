@@ -14,11 +14,10 @@ import processors.MessageProcessor;
 public class ConcurrentServer {
 	
 	private static final int PROCESSOR_INITIAL_DELAY = 0;
-	private static final int PROCESSOR_FREQUENCY = 1;
 	private static final int UPDATE_EVENT_FREQUENCY = 1;
 	private static final int THREAD_POOL_SIZE = 1;
 	private static final boolean ALWAYS_RUNNING = true;
-	private static final ScheduledExecutorService PROCESSOR_SERVICE = Executors.newScheduledThreadPool(THREAD_POOL_SIZE);
+	private static final ChannelReader channelReader = new ChannelReader();
 	private static final ScheduledExecutorService ONLINE_PEOPLE_SERVICE = Executors.newScheduledThreadPool(THREAD_POOL_SIZE);
 		
 	public static void main(String[] arg) throws IOException, InterruptedException
@@ -38,7 +37,9 @@ public class ConcurrentServer {
 		
 		try(ServerSocket server = new ServerSocket(port)){
 			
-			PROCESSOR_SERVICE.scheduleAtFixedRate(new ChannelReader(), PROCESSOR_INITIAL_DELAY, PROCESSOR_FREQUENCY, TimeUnit.MILLISECONDS);
+			Thread channelReaderThread = new Thread(channelReader);
+			channelReaderThread.start();
+			
 			ONLINE_PEOPLE_SERVICE.scheduleAtFixedRate(new Runnable(){
 				@Override
 				public void run() {

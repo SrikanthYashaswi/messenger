@@ -17,37 +17,60 @@ public class ChannelReader implements Runnable{
 	private static Deque<Integer> flushUser = new ArrayDeque<>();
 	
 	@Override
-	public void run() {
+	public void run() 
+	{
+		while(true)
+		{
+			try 
+			{
+				Thread.sleep(1);
+				process();
+			} catch (InterruptedException e) 
+			{
+				
+			}
+		}
+	}
+	
+	private void process(){
 		int maxSize = Shared.clients.size();
+		
 		StringJoiner joiner = new StringJoiner(",");
-		for(int i=0 ; i < maxSize ; i++){
-			
+		
+		for(int i = 0 ; i < maxSize ; i++)
+		{
 			User user = Shared.clients.get(i);
 			
 			queryClient(user, i);
 			
 			if(user.name!=null)
+			{
 				joiner.add(user.name);
-			
-			if(user.getIdleTime() >= 1800000){
+			}
+				
+			if(user.getIdleTime() >= 5000)
+			{
 				flushUser.push(i);
 			}
 		}
 		
 		Shared.userListCsv = joiner.toString();
 		
-		while(!flushUser.isEmpty()){
+		while(!flushUser.isEmpty())
+		{
 			int id = flushUser.pop();
 			Shared.clients.get(id).bye();
 			Shared.clients.remove(id);
 		}
 	}
 	
-	private void queryClient(User user,int index){
+	private void queryClient(User user,int index)
+	{
 		try {
 			InputStream inputStream = user.client.getInputStream();
 			
-			if( inputStream.available() <= 0 ){	
+			if( inputStream.available() <= 0 )
+			{	
 				user.increaseIdleTime();
 				return;
 			}
@@ -60,7 +83,8 @@ public class ChannelReader implements Runnable{
 			
 			user.resetIdleTime();
 		}
-		catch(IOException | MalfunctionedFrame | NoSuchAlgorithmException c){
+		catch(IOException | MalfunctionedFrame | NoSuchAlgorithmException c)
+		{
 			flushUser.push(index);
 			System.out.println(user.name +" flushed.");
 		}

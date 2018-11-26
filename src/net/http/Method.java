@@ -1,3 +1,3 @@
 package net.http;
 
-public enum Method {GET,STREAM}
+public enum Method {GET,STREAM,POST}

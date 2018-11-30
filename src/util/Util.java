@@ -12,4 +12,16 @@ public class Util {
         }
         return filler;
     }
+    
+    public static String formatStringWithLineBreaks(String message){
+    	StringBuilder builder = new StringBuilder();
+    	builder.append("<p>");
+    	String[] withBreaks = message.split("\n");
+    	for(String str : withBreaks){
+    		builder.append(str);
+    		builder.append("</br>");
+    	}
+    	builder.append("</p>");
+    	return builder.toString();
+    }
 }

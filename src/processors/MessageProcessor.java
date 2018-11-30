@@ -40,7 +40,7 @@ public class MessageProcessor {
 		}
 		else if(message.startsWith("@typing")){
 			for(User u: Shared.clients){
-				if(u.uniqueId == user.uniqueId)
+				if(u.uniqueId == user.uniqueId || u.getConnectionType().equals(ConnectedBy.CONSOLE))
 					continue;
 				if(user.groupId == u.groupId){
 					u.say(message);

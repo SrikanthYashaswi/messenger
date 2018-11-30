@@ -196,6 +196,7 @@
 	var focussed = true;
 	var inBlurMessageCount = 0;
 	EstablishConnection();
+	initNotification();
 	var typingUsers = {};
 	function initializeSocket(address)
 	{
@@ -294,6 +295,7 @@
 				otrUserCard.style.marginLeft = "auto";
 				otrUserCard.style.marginRight = "auto";
 			}
+			showNotification(msgTxt)
 		}
 		serverSocket.onerror = function(et)
 		{

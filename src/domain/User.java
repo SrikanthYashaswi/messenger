@@ -107,13 +107,15 @@ public class User{
 	}
 	
 	public void doWebsocketHandshake(Request request) throws IOException, NoSuchAlgorithmException{
-		say("HTTP/1.1 101");
-		say("Upgrade: websocket");
-		say("Connection: Upgrade");
-		say("Sec-WebSocket-Accept: "+WebSocket.getWebSocketAccept(request.getHeaders().get("Sec-WebSocket-Key"))+"\r\n");
+		say("HTTP/1.1 101 Switching Protocols\r");
+		say("Upgrade: websocket\r");
+		say("Connection: Upgrade\r");
+		say("Sec-WebSocket-Accept: "+WebSocket.getWebSocketAccept(request.getHeaders().get("Sec-WebSocket-Key"))+"\r");
+		say("Content-Encoding: identity\r");
+		say("\r");
 		setConnectionType(ConnectedBy.WEBSOCKET);
 		doHandshake();
-	}
+	}	
 	
 	public void sendOk() throws IOException
 	{

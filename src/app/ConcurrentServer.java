@@ -14,7 +14,7 @@ import processors.MessageProcessor;
 public class ConcurrentServer {
 	
 	private static final int PROCESSOR_INITIAL_DELAY = 0;
-	private static final int UPDATE_EVENT_FREQUENCY = 1;
+	private static final int UPDATE_EVENT_FREQUENCY = 2;
 	private static final int THREAD_POOL_SIZE = 1;
 	private static final boolean ALWAYS_RUNNING = true;
 	private static final ChannelReader channelReader = new ChannelReader();

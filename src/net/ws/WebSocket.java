@@ -1,5 +1,6 @@
 package net.ws;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -94,10 +95,6 @@ public class WebSocket{
     }
     
     public static String byteToString(byte[] inp) {
-        char[] sd = new char[inp.length];
-        for (int i = 0; i < inp.length; i++) {
-            sd[i] = (char) inp[i];
-        }
-        return String.copyValueOf(sd);
+        return new String(inp, StandardCharsets.UTF_8);
     }
 }

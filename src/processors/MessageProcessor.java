@@ -1,6 +1,9 @@
 package processors;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import domain.ConnectedBy;
 import domain.Shared;
@@ -8,6 +11,8 @@ import domain.User;
 import exceptions.MalfunctionedFrame;
 
 public class MessageProcessor {
+
+	public static final List<String> reservedWords = Arrays.asList(new String[]{User.SYSTEM_ICON, "@typing", "@pong"});
 	
 	private MessageProcessor(){
 		
@@ -15,15 +20,21 @@ public class MessageProcessor {
 	
 	public static void processMessage(User user, String message) throws IOException, MalfunctionedFrame{
 		message = message.trim();
+
 		if(message.equals("")){
 			return;
 		}
-		if(user.name == null){
-			if(message.charAt(0) == '@'){
-				user.systemSays("Hey Z0^^B!#.Woo cant have username with @, tell your actual name 🙄");
-				return;
-			}
-			user.setUsername(message);			
+
+		if(message.startsWith("@pong")){
+			/**
+			 * Pong message is sinked here.
+			 */
+			return;
+		}
+		
+		if(user.name == null)
+		{
+			user.setUsername(message);
 			return;
 		}
 		

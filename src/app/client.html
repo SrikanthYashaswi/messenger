@@ -64,9 +64,7 @@
 				margin-top:5px;
 				overflow:hidden;
 			}
-			#thisUser{
-				background-color:rgb(0, 67, 255);
-				color:white;
+			.thisUser{
 				float:right;
 				opacity:0;
 				padding-top:4px;
@@ -83,8 +81,9 @@
 				font-size: 16px;
 				font-family: arial;
 				transition : opacity 0.3s,margin-right 0.3s;
+				border: 1px solid gray;
 			}
-			#otherUser{
+			.otherUser{
 				background-color:rgba(230, 230, 230, 0.7);
 				color:black;
 				float:left;
@@ -151,16 +150,17 @@
 				font-family: monospace;
 	    		font-size: 12px;
     		}
+    		#last_pong{
+    			float:right;
+    		}
 		</style>
 </head>
 <body>
-<audio id="myAudio">
-  <source src="https://bigsoundbank.com/UPLOAD/ogg/1108.ogg" type="audio/ogg">
-</audio>
 
 <div id="online">
 <strong>Online: </strong>
 <span id="online_list"></span>
+<span id="last_pong"></span>
 </div>
 <div id ="wrapper">
 	<div id="statusBar">
@@ -198,9 +198,16 @@
 	EstablishConnection();
 	initNotification();
 	var typingUsers = {};
+	var lastServerEventTime = null;
+	heartBeat();
+
 	function initializeSocket(address)
 	{
-		serverSocket = new WebSocket("ws://"+address+":8080");
+		if(serverSocket != undefined && serverSocket.readyState === WebSocket.OPEN)
+		{
+			serverSocket.close();
+		}
+		serverSocket = new WebSocket(formWsUrl());
 		serverSocket.onopen = function()
 		{
 			document.getElementById("statusLight").style.backgroundColor="rgb(0, 201, 0)";
@@ -209,45 +216,16 @@
 			window.clearTimeout(connectionRefresh);
 			if(nameIsPresent)
 			{
-				serverSocket.send(userName);
+				sendMessage(userName);
 			}
 		}
 		serverSocket.onclose = function()
 		{
-			console.log("closed!");	
-			connected = false;
-			if(reconFlag==true){
-				if(toggle)
-				{
-					document.getElementById("statusLight").style.backgroundColor="rgb(255, 247, 0)";
-				}
-				else
-				{
-					document.getElementById("statusLight").style.backgroundColor="red";
-				}
-				document.getElementById("status").innerHTML = "reconnecting...";
-				toggle = !toggle;
-			}
-			else
-			{
-				document.getElementById("statusLight").style.backgroundColor="red";
-				document.getElementById("status").innerHTML = "disconnected";
-			}
-			connectionRefresh = setTimeout(function(){
-								if(connected==true)
-								{
-									reconFlag=false;
-									window.clearTimeout(this);
-								}
-								else if(connected == false)
-								{
-									reconFlag=true;
-									EstablishConnection();
-								}
-						     },1000);
+			rescueClosedConnection();
 		}
 		serverSocket.onmessage = function(evt)
 		{
+			lastServerEventTime = getTime();
 			var msgTxt = evt.data;
 			var ms;
 			var notf;
@@ -268,7 +246,7 @@
 				return;
 			}
 			else{
-				otrUserCard.id="otherUser";				
+				otrUserCard.className="otherUser";
 				notf=false;
 				ms = document.createTextNode(msgTxt);
 			}
@@ -295,7 +273,11 @@
 				otrUserCard.style.marginLeft = "auto";
 				otrUserCard.style.marginRight = "auto";
 			}
-			showNotification(msgTxt)
+			if(!document.hasFocus())
+			{
+				showNotification(msgTxt)
+			}
+
 		}
 		serverSocket.onerror = function(et)
 		{
@@ -314,12 +296,12 @@
 				tsUsrCard = document.createElement("DIV");
 				var crd = document.createElement("DIV");
 				crd.id="card";
-				tsUsrCard.id="thisUser";
+				tsUsrCard.className="thisUser";
 				d=true;
 				tsUsrCard.appendChild(ms);
 				crd.appendChild(tsUsrCard);
 				msgPanel = document.getElementById("msgPanel");
-				serverSocket.send(msg);
+				sendMessage(msg);
 				msgPanel.appendChild(crd);
 			}
 			else
@@ -333,7 +315,7 @@
 				light.appendChild(usr);
 				light.style.width="170px";
 				nameIsPresent=true;
-				serverSocket.send(msg);
+				sendMessage(msg);
 			}
 			document.getElementById("input").value="";
 		}
@@ -353,7 +335,7 @@
 		}
 		else{
 			if(userName != ""){
-				serverSocket.send('@typing:'+userName);	
+				sendMessage('@typing:'+userName);	
 			}
 		}
 	}
@@ -379,7 +361,7 @@
 	function detectFocusAndDoAction(){
 		if(!document.hasFocus()){
 			document.title ="* "+ (++inBlurMessageCount)+" New!";
-			document.getElementById("myAudio").play();
+			//document.getElementById("myAudio").play();
 		}
 	}
 	
@@ -401,6 +383,88 @@
 				}
 			}
 		},300);
+	}
+	
+	function heartBeat(){
+		setInterval(function(){
+			if(userName !="" && (getTime() - lastServerEventTime) > 10000 ){
+				rescueClosedConnection();	
+			}
+				
+			if(connected)
+			{
+				sendMessage('@pong');
+			}
+
+			document.getElementById('last_pong').innerHTML = (getTime() - lastServerEventTime)+"s" ;
+
+		},1000 );
+	}
+	
+	function rescueClosedConnection(){
+		console.log("closed!");	
+		connected = false;
+		if(reconFlag==true){
+			if(toggle)
+			{
+				document.getElementById("statusLight").style.backgroundColor="rgb(255, 247, 0)";
+			}
+			else
+			{
+				document.getElementById("statusLight").style.backgroundColor="red";
+			}
+			document.getElementById("status").innerHTML = "reconnecting...";
+			toggle = !toggle;
+		}
+		else
+		{
+			document.getElementById("statusLight").style.backgroundColor="red";
+			document.getElementById("status").innerHTML = "disconnected";
+		}
+		connectionRefresh = setTimeout(function(){
+							if(connected==true)
+							{
+								reconFlag=false;
+								window.clearTimeout(this);
+							}
+							else if(connected == false)
+							{
+								reconFlag=true;
+								EstablishConnection();
+							}
+					     },1000);
+	}
+
+	function getGroupName()
+	{
+	    var q = {};
+		var url = window.location.href;
+		var pattern = /\?(.*)/
+		var patternResult = pattern.exec(url);
+		if(patternResult != null)
+		{
+		    var queriesList = patternResult[1].split('&');
+		    for(var i = 0 ; i < queriesList.length; i++)
+		    {
+                var param = queriesList[i].split('=');
+	    		q[param[0]] = param[1];
+    		}
+		}
+		return q['g'] == undefined ? '' : '?g='+q['g'];
+	}
+
+	function sendMessage(str)
+	{
+		if(serverSocket != undefined && serverSocket.readyState === WebSocket.OPEN)
+		{
+			serverSocket.send(str);
+		}
+	}
+
+	function formWsUrl()
+	{
+	    var group = getGroupName();
+        return (location.hostname == 'localhost') ? "ws://localhost:8080"+group : "wss://events.newgen.co/im"+group;
 	}
 	
 	function getTime()

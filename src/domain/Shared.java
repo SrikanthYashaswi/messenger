@@ -10,15 +10,20 @@ public class Shared {
 	private static int currentGroupid = 0;
 	public static List<User> clients = new ArrayList<>();
 	public static Map<String,Integer> groups = new HashMap<>();
-	static int harmony = 0;
+	static int defaultGroupId = 0;
+	static String defaultGroupName = "open";
 	public static String userListCsv = null; 
 	
 	static{
-		addNewGroup("harmony");
+		addNewGroup(defaultGroupName);
 	}
 	
-	public static void addNewGroup(String groupName){
-		groups.put(groupName, currentGroupid++);
+	public static void addNewGroup(String groupName)
+	{
+		if(groups.get(groupName) == null)
+		{
+			groups.put(groupName, currentGroupid++);
+		}
 	}
 
 	private Shared(){

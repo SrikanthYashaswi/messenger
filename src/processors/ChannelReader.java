@@ -12,7 +12,7 @@ import domain.Shared;
 import domain.User;
 import exceptions.MalfunctionedFrame;
 
-public class ChannelReader implements Runnable{	
+public class ChannelReader implements Runnable{
 
 	private static Deque<Integer> flushUser = new ArrayDeque<>();
 	
@@ -40,7 +40,7 @@ public class ChannelReader implements Runnable{
 		for(int i = 0 ; i < maxSize ; i++)
 		{
 			User user = Shared.clients.get(i);
-			
+
 			queryClient(user, i);
 			
 			if(user.name!=null)
@@ -68,25 +68,25 @@ public class ChannelReader implements Runnable{
 	{
 		try {
 			InputStream inputStream = user.client.getInputStream();
-			
+
 			if( inputStream.available() <= 0 )
-			{	
+			{
 				user.increaseIdleTime();
 				return;
 			}
-			
+
 			ConnectedBy connection = user.getConnectionType();
-			
+
 			connection.handle(user);
 
 			user.print();
-			
+
 			user.resetIdleTime();
 		}
-		catch(IOException | MalfunctionedFrame | NoSuchAlgorithmException c)
+		catch (IOException | MalfunctionedFrame | NoSuchAlgorithmException | NullPointerException c)
 		{
 			flushUser.push(index);
-			System.out.println(user.name +" flushed.");
+			System.out.println(user.name + " flushed.");
 		}
 	}
 }

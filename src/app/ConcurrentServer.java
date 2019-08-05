@@ -2,6 +2,7 @@ package app;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -9,7 +10,8 @@ import java.util.concurrent.TimeUnit;
 import domain.Shared;
 import domain.User;
 import processors.ChannelReader;
-import processors.MessageProcessor;
+import processors.MessageDeliveryGuy;
+import processors.NerdLog;
 
 public class ConcurrentServer {
 	
@@ -44,7 +46,9 @@ public class ConcurrentServer {
 				@Override
 				public void run() {
 					try {
-						MessageProcessor.updateOnlineUsers();
+                            String nerdStats[] = NerdLog.accumulate();
+                        MessageDeliveryGuy.sendToEveryone("@logs:"+Arrays.toString(nerdStats));
+
 					} catch (IOException e) {
 						e.printStackTrace();
 					}

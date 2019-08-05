@@ -7,23 +7,34 @@ import java.security.NoSuchAlgorithmException;
 import exceptions.MalfunctionedFrame;
 import net.http.Request;
 import net.http.RequestReader;
-import processors.MessageProcessor;
+import processors.ConsoleMessageProcessor;
+import processors.WebSocketMessageProcessor;
 
 public enum ConnectedBy{
 	
 	CONSOLE {
 		@Override
-		public void handle(User user) throws IOException, MalfunctionedFrame {
+		public void handle(User user) throws IOException, MalfunctionedFrame
+        {
 			String userSays = user.whatSaying();
-			MessageProcessor.processMessage(user,userSays);
+            if(userSays.trim().equals(""))
+            {
+                return;
+            }
+			ConsoleMessageProcessor.processMessage(user,userSays);
 		}
 	},
 	
 	WEBSOCKET {
 		@Override
-		public void handle(User user) throws IOException, MalfunctionedFrame {
+		public void handle(User user) throws IOException, MalfunctionedFrame
+        {
 			String userSays = user.whatSaying();
-			MessageProcessor.processMessage(user,userSays);
+            if(userSays.trim().equals(""))
+            {
+                return;
+            }
+			WebSocketMessageProcessor.processMessage(user,userSays);
 		}
 	},
 	

@@ -21,13 +21,13 @@ public class ChannelReader implements Runnable{
 	{
 		while(true)
 		{
-			try 
+			try
 			{
-				Thread.sleep(1);
+				Thread.sleep(100);
 				process();
-			} catch (InterruptedException e) 
+			} catch (InterruptedException e)
 			{
-				
+
 			}
 		}
 	}
@@ -43,9 +43,9 @@ public class ChannelReader implements Runnable{
 
 			queryClient(user, i);
 			
-			if(user.name!=null)
+			if(user.getName()!=null)
 			{
-				joiner.add(user.name);
+				joiner.add(user.getName());
 			}
 				
 			if(user.getIdleTime() >= 1800000)
@@ -67,7 +67,7 @@ public class ChannelReader implements Runnable{
 	private void queryClient(User user,int index)
 	{
 		try {
-			InputStream inputStream = user.client.getInputStream();
+			InputStream inputStream = user.getInputStream();
 
 			if( inputStream.available() <= 0 )
 			{
@@ -79,14 +79,13 @@ public class ChannelReader implements Runnable{
 
 			connection.handle(user);
 
-			user.print();
-
 			user.resetIdleTime();
 		}
 		catch (IOException | MalfunctionedFrame | NoSuchAlgorithmException | NullPointerException c)
 		{
 			flushUser.push(index);
-			System.out.println(user.name + " flushed.");
+			c.printStackTrace();
+			System.out.println(user.getName() + " flushed.");
 		}
 	}
 }

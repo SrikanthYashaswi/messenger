@@ -2,6 +2,7 @@ package processors;
 
 import java.io.IOException;
 
+import dispatchers.CanvasDispatcher;
 import dispatchers.Dispatcher;
 import dispatchers.MessageDispatcher;
 import dispatchers.TypingDispatcher;
@@ -34,7 +35,11 @@ public class WebSocketMessageProcessor
         if(message.startsWith("@typing"))
         {
             dispatcher = new TypingDispatcher();
+        }
 
+        if(message.startsWith("@canvas"))
+        {
+            dispatcher = new CanvasDispatcher();
         }
 
         MessageDeliveryGuy.sendToUserGroup(user, message, dispatcher);

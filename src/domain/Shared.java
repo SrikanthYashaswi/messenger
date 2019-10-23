@@ -11,7 +11,13 @@ public class Shared {
 
 	public static String userListCsv = null;
 
-	private Shared(){
+	public static long LOOP_TIME = 0;
+
+    public static SystemInfo sysinfo = new SystemInfo();
+
+    public static int count= 0;
+
+    private Shared(){
 		
 	}
 }	

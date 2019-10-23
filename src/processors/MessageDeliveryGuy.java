@@ -1,6 +1,7 @@
 package processors;
 
 import dispatchers.Dispatcher;
+import domain.ConnectedBy;
 import domain.Shared;
 import domain.User;
 
@@ -30,10 +31,30 @@ public class MessageDeliveryGuy
         }
     }
 
+    public static void sendToGroup(String group, String message) throws IOException
+    {
+        for(User u: Shared.clients)
+        {
+            if( u.getConnectionType().equals(ConnectedBy.BROWSER))
+            {
+                return;
+            }
+
+            if(group.equals(u.getGroupName()))
+            {
+                u.say(message);
+            }
+        }
+    }
+
     public static void sendToEveryone(String message) throws IOException
     {
         for(User u: Shared.clients)
         {
+            if(u.getConnectionType().equals(ConnectedBy.BROWSER))
+            {
+                return;
+            }
             u.say(message);
         }
     }

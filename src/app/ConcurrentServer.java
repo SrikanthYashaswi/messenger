@@ -21,6 +21,8 @@ public class ConcurrentServer {
 	private static final boolean ALWAYS_RUNNING = true;
 	private static final ChannelReader channelReader = new ChannelReader();
 	private static final ScheduledExecutorService ONLINE_PEOPLE_SERVICE = Executors.newScheduledThreadPool(THREAD_POOL_SIZE);
+
+	private static final boolean debug = false;
 		
 	public static void main(String[] arg) throws IOException, InterruptedException
 	{
@@ -41,20 +43,22 @@ public class ConcurrentServer {
 			
 			Thread channelReaderThread = new Thread(channelReader);
 			channelReaderThread.start();
-			
-			ONLINE_PEOPLE_SERVICE.scheduleAtFixedRate(new Runnable(){
-				@Override
-				public void run() {
-					try {
-                            String nerdStats[] = NerdLog.accumulate();
-                        MessageDeliveryGuy.sendToEveryone("@logs:"+Arrays.toString(nerdStats));
 
-					} catch (IOException e) {
-						e.printStackTrace();
+			if(debug)
+			{
+				ONLINE_PEOPLE_SERVICE.scheduleAtFixedRate(new Runnable(){
+					@Override
+					public void run() {
+						try {
+							String nerdStats[] = NerdLog.accumulate();
+							MessageDeliveryGuy.sendToEveryone("@logs:"+Arrays.toString(nerdStats));
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 					}
-				}
-			}, PROCESSOR_INITIAL_DELAY, UPDATE_EVENT_FREQUENCY, TimeUnit.SECONDS);
-			
+				}, PROCESSOR_INITIAL_DELAY, UPDATE_EVENT_FREQUENCY, TimeUnit.SECONDS);
+			}
+
 			while(ALWAYS_RUNNING){
 				User client = new User(server.accept());
 				Shared.clients.add(client);

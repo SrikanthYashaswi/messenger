@@ -38,16 +38,10 @@ public class ClientSocket
      * @throws IOException
      * @throws InterruptedException
      */
-    private void determineConnectionType() throws IOException, InterruptedException
+    private void determineConnectionType() throws InterruptedException
     {
         Thread.sleep(1);
-        InputStream inputStream = client.getInputStream();
-        if (inputStream.available() > 0) {
-            this.connectionType = ConnectedBy.BROWSER;
-        } else {
-            this.connectionType = ConnectedBy.CONSOLE;
-            doHandshake();
-        }
+        this.connectionType = ConnectedBy.BROWSER;
     }
 
     public void publishOut(String message) throws IOException

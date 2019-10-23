@@ -26,8 +26,6 @@ public class User extends ClientSocket
 
 	public User(Socket client) throws IOException, InterruptedException {
 		super(client);
-		this.uniqueId = nextId++;
-		this.name = "user-"+this.uniqueId;
 	}
 
 	public String getGroupName(){
@@ -90,6 +88,7 @@ public class User extends ClientSocket
 	public void doWebsocketHandshake(Request request) throws IOException, NoSuchAlgorithmException
     {
 		beginWebsocketHandshake(request);
+		assignDefaultUserId();
 		attemptGroupAssignment(request);
 		attemptUsernameAssignment(request);
 		welcomeMessage();
@@ -123,5 +122,11 @@ public class User extends ClientSocket
 
 	public void print(){
 		System.out.println(client.getInetAddress()+"\t"+connectionType+"\t "+handshakeDone+"\t"+this.name+"\t"+idleTime);
+	}
+
+	private void assignDefaultUserId()
+	{
+		this.uniqueId = nextId++;
+		this.name = "user-"+this.uniqueId;
 	}
 }

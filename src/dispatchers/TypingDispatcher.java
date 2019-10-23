@@ -9,7 +9,7 @@ public class TypingDispatcher implements Dispatcher {
     @Override
     public void process(User sender, User receipient, String message) throws IOException
     {
-        if (receipient.getConnectionType().equals(ConnectedBy.CONSOLE))
+        if (receipient.getConnectionType().equals(ConnectedBy.CONSOLE) || receipient.getConnectionType().equals(ConnectedBy.BROWSER) )
         {
             return;
         }

@@ -54,7 +54,6 @@ public class Request {
         Pattern r = Pattern.compile(QUERY_REGEX);
 
         Matcher matcher = r.matcher(this.url);
-
         if(matcher.find())
         {
             String q[] = matcher.group(1).split("&");

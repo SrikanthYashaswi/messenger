@@ -4,7 +4,7 @@ import domain.User;
 
 import java.io.IOException;
 
-public class CommandResolver {
+class CommandResolver {
 
     public static boolean resolve(String message, User user) throws IOException
     {
@@ -25,12 +25,12 @@ public class CommandResolver {
         switch(key)
         {
             case "name": {
-                user.setUsername(value);
+                user.setUsername(value.trim());
                 break;
             }
 
             case "group":{
-                user.setGroupName(value);
+                user.setGroupName(value.trim());
                 break;
             }
             default:{
